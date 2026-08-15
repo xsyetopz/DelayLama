@@ -22,10 +22,12 @@ local function abort(message)
     option(nil)
 end
 
-local function add_linux_position_independent_code()
+local function add_platform_compile_flags()
     if is_plat("linux") then
         add_cflags("-fPIC", {force = true})
         add_cxxflags("-fPIC", {force = true})
+    elseif is_plat("windows") then
+        add_cxxflags("/bigobj", {force = true})
     end
 end
 
@@ -68,7 +70,7 @@ local juce_modules = {
 }
 
 local function add_juce_common()
-    add_linux_position_independent_code()
+    add_platform_compile_flags()
     add_packages("juce")
     if is_plat("macosx", "iphoneos") then
         add_mxxflags("-fno-objc-arc", {force = true})
@@ -180,21 +182,21 @@ end
 
 target("DelayLamaDsp")
     set_kind("static")
-    add_linux_position_independent_code()
+    add_platform_compile_flags()
     set_languages("cxx20")
     add_files("src/dsp/control.cpp", "src/dsp/render.cpp")
     add_includedirs("src", {public = true})
 
 target("DelayLamaEditor")
     set_kind("static")
-    add_linux_position_independent_code()
+    add_platform_compile_flags()
     set_languages("cxx20")
     add_files("src/editor/interaction.cpp")
     add_includedirs("src", {public = true})
 
 target("DelayLamaHost")
     set_kind("static")
-    add_linux_position_independent_code()
+    add_platform_compile_flags()
     set_languages("cxx20")
     add_files("src/host/processor.cpp")
     add_includedirs("src", {public = true})
@@ -208,7 +210,7 @@ end
 
 target("DelayLamaEditorAssets")
     set_kind("static")
-    add_linux_position_independent_code()
+    add_platform_compile_flags()
     set_languages("cxx20")
     -- Wrap generated initializers so adapters depend on stable asset symbols.
     add_rules("utils.bin2c", {extensions = ".png"})

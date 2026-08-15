@@ -40,10 +40,10 @@ jobs:
             target_minver_arg: ""
     steps:
       - name: Check out source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Xmake
-        uses: xmake-io/github-action-setup-xmake@dcda7affc05f4d6d32357f30e1eb3414d45ac4db
+        uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
         with:
           xmake-version: "3.1.0"
 
