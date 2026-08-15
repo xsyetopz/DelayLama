@@ -484,6 +484,8 @@ if requested_formats.lv2 and supports_lv2() then
         add_packages("juce")
         if is_plat("linux") then
             add_links("dl", "pthread")
+        elseif is_plat("windows") then
+            add_syslinks("shell32")
         end
         on_load(function (target)
             add_juce_package_sources(target, {
