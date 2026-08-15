@@ -32,4 +32,4 @@ Remove the development AUv3 registration with `just uninstall-auv3-dev`.
 
 ## License
 
-AudioNerdz distributed Delay Lama as freeware, but that statement does not grant a source-code license. This repository does not apply MIT, Unlicense, or another open-source license. Redistribution requires permission from the relevant code, name, and artwork rights holders.
+AudioNerdz distributed Delay Lama as freeware. Redistribution requires permission from the relevant code, name, and artwork rights holders.
