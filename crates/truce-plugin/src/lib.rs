@@ -1,8 +1,10 @@
+//! Truce plugin integration and raw editor implementation.
 #![deny(unsafe_code)]
-//! DelayLama truce plugin implementation and format exports.
-
+/// Framework-owned plugin export declarations.
 mod exports;
-mod plugin_logic;
+/// Asset-backed native editor implementation.
 mod raw_editor;
+/// Real-time Truce lifecycle adapter and editor layout.
+mod runtime;
 
-pub use plugin_logic::{PluginLogic, PluginParams};
+pub use runtime::{PluginLogic, PluginParams};

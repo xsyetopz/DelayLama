@@ -1,6 +1,8 @@
-use delaylama_core::Parameters;
+//! Public host-processor contract tests.
+
 use delaylama_editor::{GestureResult, PadGesture};
 use delaylama_host::ProcessorModel;
+use delaylama_synthesizer::Parameters;
 
 #[test]
 fn parameter_round_trip() {
@@ -39,7 +41,7 @@ fn visual_state_follows_processor_and_pad_ownership() {
     let state = processor.visual_state();
     assert_eq!(state.note, -1);
     assert!(!state.gate);
-    assert_eq!(state.vowel, 0.25);
+    assert!((state.vowel - 0.25).abs() <= f32::EPSILON);
     assert_eq!(state.atlas_selector, 0.0);
 }
 
@@ -49,7 +51,7 @@ fn factory_programs_match_original_contract() {
     assert_eq!(ProcessorModel::factory_programs()[0].0, "Rabten");
     let mut processor = ProcessorModel::default();
     assert!(processor.load_factory_program(4));
-    assert_eq!(processor.parameters().voice, 1.0);
+    assert!((processor.parameters().voice - 1.0).abs() <= f32::EPSILON);
     assert!(!processor.load_factory_program(5));
 }
 
@@ -84,9 +86,18 @@ fn pad_gesture_becomes_local_core_events() {
         PadGesture::Down,
     );
     assert!(events[0].local_pad);
-    assert_eq!(events[0].kind, delaylama_core::EventType::NoteOn);
-    assert_eq!(events[1].kind, delaylama_core::EventType::PadPitch);
-    assert_eq!(events[2].kind, delaylama_core::EventType::PadVowel);
+    assert_eq!(
+        events[0].kind,
+        delaylama_synthesizer::SynthesisEventKind::NoteOn
+    );
+    assert_eq!(
+        events[1].kind,
+        delaylama_synthesizer::SynthesisEventKind::PadPitch
+    );
+    assert_eq!(
+        events[2].kind,
+        delaylama_synthesizer::SynthesisEventKind::PadVowel
+    );
 }
 
 #[test]
@@ -102,7 +113,10 @@ fn pad_drag_keeps_single_local_voice_gated() {
         note_off: false,
     };
     let events = ProcessorModel::pad_events(result, PadGesture::Drag);
-    assert_eq!(events[0].kind, delaylama_core::EventType::NoteOn);
-    assert_eq!(events[0].value, 1.0);
+    assert_eq!(
+        events[0].kind,
+        delaylama_synthesizer::SynthesisEventKind::NoteOn
+    );
+    assert!((events[0].value - 1.0).abs() <= f32::EPSILON);
     assert!(events[0].local_pad);
 }

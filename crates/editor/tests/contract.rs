@@ -1,5 +1,7 @@
-use delaylama_core::VisualState;
+//! Public editor-contract tests.
+
 use delaylama_editor::{EditorModel, PadGesture};
+use delaylama_synthesizer::VisualState;
 
 #[test]
 fn default_and_gesture_contract() {

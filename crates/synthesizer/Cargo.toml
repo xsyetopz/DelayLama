@@ -1,15 +1,18 @@
 [package]
-name = "delaylama-core"
+name = "delaylama-synthesizer"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 readme.workspace = true
+license-file.workspace = true
+description = "Stateful DSP engine for the Delay Lama monophonic synthesizer"
 keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
 delaylama-protocol = { path = "../protocol" }
+num-traits = { workspace = true }
 
 [lints]
 workspace = true

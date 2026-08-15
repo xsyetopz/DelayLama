@@ -1,12 +1,21 @@
+//! Public data types exchanged by the synthesis stages.
+/// Lowest sample rate accepted by the engine.
 pub const MIN_SAMPLE_RATE: f64 = 8_000.0;
+/// Highest sample rate accepted by the engine.
 pub const MAX_SAMPLE_RATE: f64 = 384_000.0;
+/// Sample rate used before the host prepares the engine.
 pub const DEFAULT_SAMPLE_RATE: f64 = 44_100.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Visual state exported by the engine for the editor.
 pub struct VisualState {
+    /// Internal MIDI note number.
     pub note: i32,
+    /// Whether the engine currently has a held voice.
     pub gate: bool,
+    /// Current vowel position in the normalized range `0..=1`.
     pub vowel: f32,
+    /// Normalized artwork frame selector.
     pub atlas_selector: f32,
 }
 
@@ -21,36 +30,22 @@ impl Default for VisualState {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[repr(u8)]
-pub enum EventType {
-    #[default]
-    NoteOff,
-    NoteOn,
-    PitchBend,
-    ControlChange,
-    PadPitch,
-    PadVowel,
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Event {
-    pub kind: EventType,
-    pub sample_offset: i32,
-    pub note: i32,
-    pub value: f32,
-    pub controller: i32,
-    pub local_pad: bool,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Normalized synthesis parameters supplied by the host.
 pub struct Parameters {
+    /// Vowel position in the range `0..=1`.
     pub vowel: f32,
+    /// Portamento time in the range `0..=1`.
     pub port_time: f32,
+    /// Delay mix in the range `0..=1`.
     pub delay_mix: f32,
+    /// Voice character in the range `0..=1`.
     pub voice: f32,
+    /// Vibrato amount in the range `0..=1`.
     pub vibrato: f32,
+    /// Output volume in the range `0..=1`.
     pub volume: f32,
+    /// Pad horizontal pitch routing in the range `0..=1`.
     pub xy_routing: f32,
 }
 
@@ -69,15 +64,22 @@ impl Default for Parameters {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// Current monophonic voice state.
 pub struct VoiceState {
+    /// Current internal note, or `-1` while idle.
     pub current_note: i32,
+    /// Whether a note is held.
     pub gate: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Current editor-pad modulation and lifecycle state.
 pub struct PadState {
+    /// Horizontal pad pitch modulation in the range `0..=1`.
     pub pitch_modulation: f32,
+    /// Pad vowel position in the range `0..=1`.
     pub vowel: f32,
+    /// Whether the editor pad is held.
     pub active: bool,
 }
 

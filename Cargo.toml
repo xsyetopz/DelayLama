@@ -7,13 +7,17 @@ edition = "2024"
 rust-version = "1.97"
 repository = "https://github.com/xsyetopz/DelayLama.git"
 readme = "README.md"
+license-file = "README.md"
 keywords = ["audio", "synthesizer", "plugin"]
 categories = ["multimedia::audio"]
 version = "0.1.0"
 
+[workspace.dependencies]
+num-traits = "0.2.19"
+
 [workspace.lints.rust]
 missing_debug_implementations = "warn"             # Require `Debug` impl on public types.
-missing_docs = "allow"
+missing_docs = "deny"
 static_mut_refs = "deny"                           # Prevent unsound access to mutable static state.
 unexpected_cfgs = "deny"                           # Reject typos in `#[cfg(...)]` attributes.
 unsafe_code = "deny"                               # Disallow unsafe code outside explicit `unsafe` blocks.

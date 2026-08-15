@@ -13,10 +13,15 @@ impl Adapter {
     }
 
     pub const fn formats() -> [Self; 5] {
-        [formats::CLAP, formats::VST3, formats::AUv2, formats::AUv3, formats::LV2]
+        [
+            formats::CLAP,
+            formats::VST3,
+            formats::AUv2,
+            formats::AUv3,
+            formats::LV2,
+        ]
     }
 }
-
 
 /// Format descriptors owned by the adapter capability.
 mod formats {

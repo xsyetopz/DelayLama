@@ -51,6 +51,22 @@ NEW_WILL_APPEAR = r"""override func viewWillAppear() {
         setupGUIIfReady()
     }"""
 
+OLD_USER_PRESET_RECALL = """            } else {
+                // User preset: replay the host-stored document state.
+                guard let state = try? presetState(for: preset) else { return }
+                fullStateForDocument = state
+                _currentPreset = preset
+            }"""
+NEW_USER_PRESET_RECALL = """            } else {
+                // Logic can assign a negative-numbered user preset before it
+                // has written a backing document. Asking AudioToolbox for
+                // that absent file raises an Objective-C exception, which
+                // cannot be caught by Swift's `try?`. The host restores the
+                // document state separately, so retain the preset reference
+                // and let fullStateForDocument handle the actual restore.
+                _currentPreset = preset
+            }"""
+
 
 def find_template() -> Path:
     cargo_home = Path.home() / ".cargo" / "registry" / "src"
@@ -68,6 +84,7 @@ def patched(source: str) -> str:
         or source.count(OLD_SELECT) != 1
         or source.count(OLD_MASK) != 1
         or source.count(OLD_WILL_APPEAR) != 1
+        or source.count(OLD_USER_PRESET_RECALL) != 1
     ):
         raise RuntimeError(
             "cargo-truce AUv3 template no longer matches the verified 6.3.0 source"
@@ -77,6 +94,7 @@ def patched(source: str) -> str:
         .replace(OLD_SELECT, NEW_SELECT)
         .replace(OLD_MASK, NEW_MASK)
         .replace(OLD_WILL_APPEAR, NEW_WILL_APPEAR)
+        .replace(OLD_USER_PRESET_RECALL, NEW_USER_PRESET_RECALL)
     )
 
 

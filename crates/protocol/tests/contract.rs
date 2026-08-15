@@ -1,9 +1,11 @@
-use delaylama_protocol::{CC_DELAY_MIX, MidiMessage, internal_note, to_core_event};
+//! Public protocol-contract tests.
+
+use delaylama_protocol::{CC_DELAY_MIX, MidiMessage, internal_note, to_synthesis_event};
 
 #[test]
 fn maps_midi_messages_at_host_boundary() {
     assert_eq!(
-        to_core_event(
+        to_synthesis_event(
             MidiMessage::NoteOn {
                 note: 60,
                 velocity: 127
@@ -15,7 +17,7 @@ fn maps_midi_messages_at_host_boundary() {
         48
     );
     assert!(
-        to_core_event(
+        to_synthesis_event(
             MidiMessage::NoteOn {
                 note: 10,
                 velocity: 127
@@ -25,7 +27,7 @@ fn maps_midi_messages_at_host_boundary() {
         .is_none()
     );
     assert_eq!(
-        to_core_event(
+        to_synthesis_event(
             MidiMessage::ControlChange {
                 controller: CC_DELAY_MIX,
                 value: 64

@@ -1,5 +1,8 @@
-use delaylama_core::{Event, EventType, Parameters, SynthEngine, VisualState, VoiceState};
+//! Host lifecycle, state, and event translation for the processor.
 use delaylama_editor::{GestureResult, PadGesture};
+use delaylama_synthesizer::{
+    Parameters, SynthEngine, SynthesisEvent, SynthesisEventKind, VisualState, VoiceState,
+};
 
 const FACTORY_PROGRAMS: [(&str, f32, f32, f32); 5] = [
     ("Rabten", 0.5, 0.8, 0.5),
@@ -9,42 +12,61 @@ const FACTORY_PROGRAMS: [(&str, f32, f32, f32); 5] = [
     ("Tinley", 1.0, 0.9, 1.0),
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
+/// Host-facing lifecycle and state wrapper around the synthesis engine.
 pub struct ProcessorModel {
     engine: SynthEngine,
     parameters: Parameters,
 }
-impl Default for ProcessorModel {
-    fn default() -> Self {
-        Self {
-            engine: SynthEngine::default(),
-            parameters: Parameters::default(),
-        }
-    }
-}
 impl ProcessorModel {
+    /// Prepares audio buffers and applies the current parameters.
     pub fn prepare(&mut self, sample_rate: f64, max_block_size: usize) {
         self.engine.prepare(sample_rate, max_block_size, 2);
-        self.engine.set_parameters(self.parameters)
+        self.engine.set_parameters(self.parameters);
     }
+    /// Releases the current render state.
     pub fn release(&mut self) {
-        self.engine.reset()
+        self.engine.reset();
     }
-    pub fn process(&mut self, outputs: &mut [&mut [f32]], samples: usize, events: &[Event]) {
-        self.engine.process(outputs, samples, events)
+    /// Processes one host audio block and its normalized events.
+    pub fn process(
+        &mut self,
+        outputs: &mut [&mut [f32]],
+        samples: usize,
+        events: &[SynthesisEvent],
+    ) {
+        self.engine.process(outputs, samples, events);
     }
+    /// Applies an event before rendering the next sample.
+    pub fn apply_event(&mut self, event: SynthesisEvent) {
+        self.engine.process(&mut [], 0, &[event]);
+    }
+    /// Renders one stereo sample without allocating on the audio thread.
+    pub fn render_stereo_frame(&mut self) -> [f32; 2] {
+        let mut left = [0.0_f32];
+        let mut right = [0.0_f32];
+        self.engine.process(&mut [&mut left, &mut right], 1, &[]);
+        [
+            left.first().copied().unwrap_or_default(),
+            right.first().copied().unwrap_or_default(),
+        ]
+    }
+    /// Returns the parameters currently applied to the engine.
     pub fn parameters(&self) -> Parameters {
         self.engine.parameters()
     }
+    /// Stores and applies normalized synthesis parameters.
     pub fn set_parameters(&mut self, p: Parameters) {
         self.parameters = p;
-        self.engine.set_parameters(p)
+        self.engine.set_parameters(p);
     }
 
-    pub fn factory_programs() -> &'static [(&'static str, f32, f32, f32); 5] {
+    /// Returns the built-in program parameter records.
+    pub const fn factory_programs() -> &'static [(&'static str, f32, f32, f32); 5] {
         &FACTORY_PROGRAMS
     }
 
+    /// Serializes parameters into the versioned host state format.
     pub fn save_state(&self) -> [u8; 32] {
         let p = self.parameters;
         let values = [
@@ -57,16 +79,21 @@ impl ProcessorModel {
             p.xy_routing,
         ];
         let mut state = [0_u8; 32];
-        state[..4].copy_from_slice(b"DLM1");
+        if let Some(header) = state.get_mut(..4) {
+            header.copy_from_slice(b"DLM1");
+        }
         for (index, value) in values.into_iter().enumerate() {
             let start = 4 + index * 4;
-            state[start..start + 4].copy_from_slice(&value.to_le_bytes());
+            if let Some(destination) = state.get_mut(start..start + 4) {
+                destination.copy_from_slice(&value.to_le_bytes());
+            }
         }
         state
     }
 
+    /// Loads a versioned state buffer, returning whether it was accepted.
     pub fn load_state(&mut self, state: &[u8]) -> bool {
-        if state.len() != 32 || state[..4] != *b"DLM1" {
+        if state.len() != 32 || state.get(..4) != Some(b"DLM1".as_slice()) {
             return false;
         }
         let mut values = [0.0_f32; 7];
@@ -80,18 +107,28 @@ impl ProcessorModel {
             };
             *value = f32::from_le_bytes(bytes);
         }
+        let [
+            vowel,
+            port_time,
+            delay_mix,
+            voice,
+            vibrato,
+            volume,
+            xy_routing,
+        ] = values;
         self.set_parameters(Parameters {
-            vowel: values[0],
-            port_time: values[1],
-            delay_mix: values[2],
-            voice: values[3],
-            vibrato: values[4],
-            volume: values[5],
-            xy_routing: values[6],
+            vowel,
+            port_time,
+            delay_mix,
+            voice,
+            vibrato,
+            volume,
+            xy_routing,
         });
         true
     }
 
+    /// Loads a built-in program by index.
     pub fn load_factory_program(&mut self, index: usize) -> bool {
         let Some((_, port_time, delay_mix, voice)) = FACTORY_PROGRAMS.get(index).copied() else {
             return false;
@@ -104,39 +141,42 @@ impl ProcessorModel {
         });
         true
     }
+    /// Returns the current engine voice state.
     pub fn voice_state(&self) -> VoiceState {
         self.engine.voice_state()
     }
 
-    pub fn pad_events(result: GestureResult, gesture: PadGesture) -> [Event; 3] {
+    /// Converts a pad gesture into core events.
+    pub fn pad_events(result: GestureResult, gesture: PadGesture) -> [SynthesisEvent; 3] {
         let note_on = !matches!(gesture, PadGesture::Up);
         [
-            Event {
+            SynthesisEvent {
                 kind: if note_on {
-                    EventType::NoteOn
+                    SynthesisEventKind::NoteOn
                 } else {
-                    EventType::NoteOff
+                    SynthesisEventKind::NoteOff
                 },
                 note: 28,
                 value: if note_on { 1.0 } else { 0.0 },
                 local_pad: true,
-                ..Event::default()
+                ..SynthesisEvent::default()
             },
-            Event {
-                kind: EventType::PadPitch,
+            SynthesisEvent {
+                kind: SynthesisEventKind::PadPitch,
                 value: result.x,
                 local_pad: true,
-                ..Event::default()
+                ..SynthesisEvent::default()
             },
-            Event {
-                kind: EventType::PadVowel,
+            SynthesisEvent {
+                kind: SynthesisEventKind::PadVowel,
                 value: result.vowel,
                 local_pad: true,
-                ..Event::default()
+                ..SynthesisEvent::default()
             },
         ]
     }
 
+    /// Returns the visual state consumed by the editor.
     pub fn visual_state(&self) -> VisualState {
         let voice = self.engine.voice_state();
         let parameters = self.engine.parameters();

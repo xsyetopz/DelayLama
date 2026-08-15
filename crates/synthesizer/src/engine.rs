@@ -1,11 +1,17 @@
-use crate::GRAIN_SECONDS;
+//! Original Delay Lama granular-formant synthesis engine.
+
+use crate::state::*;
 use crate::tables;
-use crate::types::*;
 use delaylama_protocol::{
     CC_DELAY_MIX, CC_PORT_TIME, CC_VIBRATO, CC_VOICE, CC_VOLUME, CC_XY_ROUTING, CC7_VOLUME_SCALE,
-    PAD_INTERNAL_NOTE,
+    PAD_INTERNAL_NOTE, SynthesisEvent, SynthesisEventKind,
 };
 
+const GRAIN_SECONDS: f64 = 0.02;
+type Event = SynthesisEvent;
+type EventType = SynthesisEventKind;
+
+/// Stateful original Delay Lama granular-formant synthesizer.
 #[derive(Clone, Debug)]
 pub struct SynthEngine {
     sample_rate: f64,
@@ -113,6 +119,7 @@ impl Default for SynthEngine {
 }
 
 impl SynthEngine {
+    /// Prepares buffers and timing state for the host sample rate and channel count.
     pub fn prepare(&mut self, sample_rate: f64, _max: usize, ch: usize) {
         self.sample_rate = if sample_rate.is_finite() {
             sample_rate.clamp(MIN_SAMPLE_RATE, MAX_SAMPLE_RATE)
@@ -131,6 +138,7 @@ impl SynthEngine {
         self.reset()
     }
 
+    /// Resets voices, modulation, grain history, delay state, and artwork state.
     pub fn reset(&mut self) {
         self.voice = VoiceState {
             current_note: -1,
@@ -179,6 +187,7 @@ impl SynthEngine {
         self.atlas_idle_index = 0;
     }
 
+    /// Applies normalized host parameters to the original synthesis model.
     pub fn set_parameters(&mut self, p: Parameters) {
         let vowel_changed = clamp(p.vowel, 0.5) != self.params.vowel;
         let voice_changed = clamp(p.voice, 0.5) != self.params.voice;
@@ -199,23 +208,28 @@ impl SynthEngine {
         }
     }
 
+    /// Returns the currently active synthesis parameters.
     pub fn parameters(&self) -> Parameters {
         self.params
     }
 
+    /// Returns the monophonic voice state.
     pub fn voice_state(&self) -> VoiceState {
         self.voice
     }
 
+    /// Returns the current editor-pad state.
     pub fn pad_state(&self) -> PadState {
         self.pad
     }
 
+    /// Returns the artwork-atlas selector driven by the original engine state.
     pub fn atlas_selector(&self) -> f32 {
         self.atlas_selector
     }
 
-    pub fn process(&mut self, outputs: &mut [&mut [f32]], n: usize, events: &[Event]) {
+    /// Processes one block using the original grain, overlap-add, and delay algorithm.
+    pub fn process(&mut self, outputs: &mut [&mut [f32]], n: usize, events: &[SynthesisEvent]) {
         if n == 0 {
             for event in events.iter().filter(|event| event.sample_offset <= 0) {
                 self.apply(*event);

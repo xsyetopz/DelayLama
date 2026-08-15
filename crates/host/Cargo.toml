@@ -5,11 +5,14 @@ edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 readme.workspace = true
+license-file.workspace = true
+description = "Host lifecycle, state persistence, and editor coordination for Delay Lama"
 keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
-delaylama-core = { path = "../core" }
+delaylama-synthesizer = { path = "../synthesizer" }
+delaylama-protocol = { path = "../protocol" }
 delaylama-editor = { path = "../editor" }
 
 [lints]

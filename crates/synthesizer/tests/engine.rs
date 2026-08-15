@@ -1,4 +1,6 @@
-use delaylama_core::*;
+//! Synthesizer behavior and regression tests.
+
+use delaylama_synthesizer::*;
 
 #[test]
 fn sanitises_parameters() {
@@ -7,18 +9,18 @@ fn sanitises_parameters() {
         vowel: f32::NAN,
         ..Parameters::default()
     });
-    assert_eq!(e.parameters().vowel, 0.5);
+    assert!((e.parameters().vowel - 0.5).abs() <= f32::EPSILON);
 }
 
 #[test]
 fn renders_voice_and_delay() {
     let mut e = SynthEngine::default();
     e.prepare(44100.0, 64, 2);
-    let ev = [Event {
-        kind: EventType::NoteOn,
+    let ev = [SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 69,
         value: 1.0,
-        ..Event::default()
+        ..SynthesisEvent::default()
     }];
     let mut l = [0.0; 64];
     let mut r = [0.0; 64];
@@ -33,26 +35,26 @@ fn controls_pad() {
     e.process(
         &mut [],
         1,
-        &[Event {
-            kind: EventType::PadVowel,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::PadVowel,
             value: 0.08,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert!(e.pad_state().active);
-    assert_eq!(e.pad_state().vowel, 0.08);
+    assert!((e.pad_state().vowel - 0.08).abs() <= f32::EPSILON);
 }
 
 #[test]
 fn note_event_starts_at_sample_offset() {
     let mut engine = SynthEngine::default();
     engine.prepare(44_100.0, 64, 2);
-    let event = Event {
-        kind: EventType::NoteOn,
+    let event = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         sample_offset: 16,
         note: 69,
         value: 1.0,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     let mut left = [0.0; 32];
     let mut right = [0.0; 32];
@@ -67,14 +69,14 @@ fn midi_controller_ids_match_core_protocol() {
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::ControlChange,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::ControlChange,
             controller: 12,
             value: 0.25,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
-    assert_eq!(engine.parameters().delay_mix, 0.25);
+    assert!((engine.parameters().delay_mix - 0.25).abs() <= f32::EPSILON);
 }
 
 #[test]
@@ -83,40 +85,40 @@ fn duplicate_note_on_is_idempotent_and_one_note_off_restores_previous_note() {
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 60,
             value: 1.0,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 64,
             value: 1.0,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 64,
             value: 1.0,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOff,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOff,
             note: 64,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert_eq!(engine.voice_state().current_note, 60);
@@ -128,34 +130,34 @@ fn matches_original_controller_and_local_pad_protocol() {
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::ControlChange,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::ControlChange,
             controller: 7,
             value: 127.0,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert!((engine.parameters().volume - 0.127).abs() < 0.0001);
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 28,
             value: 1.0,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert!(engine.pad_state().active);
     engine.process(
         &mut [],
         0,
-        &[Event {
-            kind: EventType::NoteOff,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOff,
             note: 28,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert!(!engine.pad_state().active);
@@ -170,12 +172,12 @@ fn local_pad_note_enters_audio_voice_and_renders() {
     engine.process(
         &mut [&mut left, &mut right],
         64,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 28,
             value: 1.0,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert_eq!(engine.voice_state().current_note, 28);
@@ -185,11 +187,11 @@ fn local_pad_note_enters_audio_voice_and_renders() {
     engine.process(
         &mut [&mut left, &mut right],
         1,
-        &[Event {
-            kind: EventType::NoteOff,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOff,
             note: 28,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     assert!(!engine.voice_state().gate);
@@ -210,11 +212,11 @@ fn render_note_with_voice(note: i32, voice: f32) -> Vec<f32> {
     engine.process(
         &mut [&mut left, &mut right],
         2_048,
-        &[Event {
-            kind: EventType::NoteOn,
+        &[SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note,
             value: 1.0,
-            ..Event::default()
+            ..SynthesisEvent::default()
         }],
     );
     left
@@ -245,18 +247,18 @@ fn every_voice_setting_rebuilds_the_formant_grain() {
 #[test]
 fn local_pad_lifecycle_is_idempotent_and_one_release_stops_voice() {
     let mut engine = SynthEngine::default();
-    let down = Event {
-        kind: EventType::NoteOn,
+    let down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 28,
         value: 1.0,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let up = Event {
-        kind: EventType::NoteOff,
+    let up = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOff,
         note: 28,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     engine.process(&mut [], 0, &[down, down]);
     assert!(engine.voice_state().gate);
@@ -282,18 +284,18 @@ fn reset_and_local_pad_release_have_no_default_or_stale_voice() {
         "initialization must not synthesize a default note"
     );
 
-    let down = Event {
-        kind: EventType::NoteOn,
+    let down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 28,
         value: 1.0,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let up = Event {
-        kind: EventType::NoteOff,
+    let up = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOff,
         note: 28,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     engine.process(&mut [&mut left, &mut right], 1, &[down]);
     engine.process(&mut [&mut left, &mut right], 25_000, &[up]);
@@ -307,25 +309,25 @@ fn reset_and_local_pad_release_have_no_default_or_stale_voice() {
 #[test]
 fn external_midi_owns_voice_and_pad_cannot_add_note_28_phantom() {
     let mut engine = SynthEngine::default();
-    let local_down = Event {
-        kind: EventType::NoteOn,
+    let local_down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 28,
         value: 1.0,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let external_down = Event {
-        kind: EventType::NoteOn,
+    let external_down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 60,
         value: 1.0,
         local_pad: false,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let external_up = Event {
-        kind: EventType::NoteOff,
+    let external_up = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOff,
         note: 60,
         local_pad: false,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     engine.process(&mut [], 0, &[local_down]);
     assert_eq!(engine.voice_state().current_note, 28);
@@ -347,26 +349,26 @@ fn render_mouse_pad_drag(x: f32) -> Vec<f32> {
         ..Parameters::default()
     });
     let events = [
-        Event {
-            kind: EventType::NoteOn,
+        SynthesisEvent {
+            kind: SynthesisEventKind::NoteOn,
             note: 28,
             value: 64.0 / 127.0,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         },
-        Event {
-            kind: EventType::PadPitch,
+        SynthesisEvent {
+            kind: SynthesisEventKind::PadPitch,
             note: -1,
             value: x,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         },
-        Event {
-            kind: EventType::PadVowel,
+        SynthesisEvent {
+            kind: SynthesisEventKind::PadVowel,
             note: -1,
             value: 0.5,
             local_pad: true,
-            ..Event::default()
+            ..SynthesisEvent::default()
         },
     ];
     let mut left = vec![0.0; 4_096];
@@ -396,25 +398,25 @@ fn mouse_pad_down_drag_up_has_one_lifecycle_and_reaches_silence() {
         volume: 0.5,
         ..Parameters::default()
     });
-    let down = Event {
-        kind: EventType::NoteOn,
+    let down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 28,
         value: 64.0 / 127.0,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let drag = Event {
-        kind: EventType::PadPitch,
+    let drag = SynthesisEvent {
+        kind: SynthesisEventKind::PadPitch,
         note: -1,
         value: 0.8,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let up = Event {
-        kind: EventType::NoteOff,
+    let up = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOff,
         note: 28,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     let mut left = vec![0.0; 25_000];
     let mut right = vec![0.0; 25_000];
@@ -434,18 +436,18 @@ fn releasing_last_note_discards_queued_dry_grains() {
         volume: 0.5,
         ..Parameters::default()
     });
-    let down = Event {
-        kind: EventType::NoteOn,
+    let down = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOn,
         note: 28,
         value: 1.0,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
-    let up = Event {
-        kind: EventType::NoteOff,
+    let up = SynthesisEvent {
+        kind: SynthesisEventKind::NoteOff,
         note: 28,
         local_pad: true,
-        ..Event::default()
+        ..SynthesisEvent::default()
     };
     let mut left = [0.0; 64];
     let mut right = [0.0; 64];

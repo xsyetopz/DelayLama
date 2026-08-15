@@ -218,18 +218,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
-name = "delaylama-core"
-version = "0.1.0"
-dependencies = [
- "delaylama-protocol",
-]
-
-[[package]]
 name = "delaylama-editor"
 version = "0.1.0"
 dependencies = [
- "delaylama-core",
  "delaylama-editor-assets",
+ "delaylama-synthesizer",
+ "num-traits",
 ]
 
 [[package]]
@@ -240,13 +234,22 @@ version = "0.1.0"
 name = "delaylama-host"
 version = "0.1.0"
 dependencies = [
- "delaylama-core",
  "delaylama-editor",
+ "delaylama-protocol",
+ "delaylama-synthesizer",
 ]
 
 [[package]]
 name = "delaylama-protocol"
 version = "0.1.0"
+
+[[package]]
+name = "delaylama-synthesizer"
+version = "0.1.0"
+dependencies = [
+ "delaylama-protocol",
+ "num-traits",
+]
 
 [[package]]
 name = "delaylama-truce-plugin"
@@ -256,14 +259,15 @@ dependencies = [
  "bytemuck",
  "clap-sys",
  "crossbeam-queue",
- "delaylama-core",
  "delaylama-editor",
  "delaylama-host",
  "delaylama-protocol",
+ "delaylama-synthesizer",
  "image",
  "log",
- "pollster",
- "raw-window-handle 0.5.2",
+ "num-traits",
+ "pollster 1.0.1",
+ "raw-window-handle 0.6.2",
  "truce",
  "truce-au",
  "truce-clap",
@@ -318,6 +322,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "euclid"
+version = "0.22.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1a05365e3b1c6d1650318537c7460c6923f1abdd272ad6842baa2b509957a06"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "fdeflate"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -341,6 +354,12 @@ dependencies = [
  "crc32fast",
  "miniz_oxide",
 ]
+
+[[package]]
+name = "float_next_after"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 
 [[package]]
 name = "foldhash"
@@ -643,6 +662,38 @@ name = "log"
 version = "0.4.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
+
+[[package]]
+name = "lyon_geom"
+version = "1.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4336502e29e32af93cf2dad2214ed6003c17ceb5bd499df77b1de663b9042b92"
+dependencies = [
+ "arrayvec",
+ "euclid",
+ "num-traits",
+]
+
+[[package]]
+name = "lyon_path"
+version = "1.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c463f9c428b7fc5ec885dcd39ce4aa61e29111d0e33483f6f98c74e89d8621e"
+dependencies = [
+ "lyon_geom",
+ "num-traits",
+]
+
+[[package]]
+name = "lyon_tessellation"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e43b7e44161571868f5c931d12583592c223c5583eef86b08aa02b7048a3552"
+dependencies = [
+ "float_next_after",
+ "lyon_path",
+ "num-traits",
+]
 
 [[package]]
 name = "malloc_buf"
@@ -1019,6 +1070,12 @@ name = "pollster"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
+
+[[package]]
+name = "pollster"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc6355899e1c9462875b6757c79f3caa011a1fdae12bbb1a2e72dd1f234f8336"
 
 [[package]]
 name = "portable-atomic"
@@ -1475,6 +1532,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "truce-gpu"
+version = "6.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d12cff78d742e975e3ee9c8a4c33a589bf3bbfc55420496be8b33bac4a657124"
+dependencies = [
+ "baseview-truce",
+ "bytemuck",
+ "log",
+ "lyon_tessellation",
+ "pollster 0.4.0",
+ "raw-window-handle 0.5.2",
+ "truce-core",
+ "truce-font",
+ "truce-gui-types",
+ "truce-params",
+ "wgpu",
+]
+
+[[package]]
 name = "truce-gui"
 version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1487,10 +1563,11 @@ dependencies = [
  "objc2-foundation",
  "objc2-quartz-core",
  "objc2-ui-kit",
- "pollster",
+ "pollster 0.4.0",
  "raw-window-handle 0.5.2",
  "truce-core",
  "truce-cpu",
+ "truce-gpu",
  "truce-gui-types",
  "truce-gui-utils",
  "truce-params",

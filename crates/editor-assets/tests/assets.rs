@@ -1,3 +1,5 @@
+//! Embedded-artwork contract tests.
+
 use delaylama_editor_assets::Artwork;
 
 fn png_dimensions(bytes: &[u8]) -> Option<(u32, u32)> {

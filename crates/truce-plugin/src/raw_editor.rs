@@ -13,7 +13,7 @@ use truce::prelude::{Editor, Params, PluginContext};
 use truce_gui::platform::{ParentWindow, create_wgpu_surface, query_backing_scale};
 use wgpu::util::DeviceExt;
 
-use crate::plugin_logic::{PadCommand, PluginParams};
+use crate::runtime::{PadCommand, PluginParams};
 
 const SIZE: (u32, u32) = (360, 510);
 const SHADER: &str = r#"
@@ -51,6 +51,7 @@ impl Renderer {
         unsafe_code,
         reason = "wgpu requires the baseview child window to outlive its surface"
     )]
+
     unsafe fn new(window: &Window, width: u32, height: u32) -> Option<Self> {
         let instance = wgpu::Instance::new(truce_gui::platform::editor_instance_descriptor());
         let surface = unsafe { create_wgpu_surface(&instance, window) }?;
@@ -381,9 +382,11 @@ fn key_white(image: &mut RgbaImage) {
         }
     }
 }
+
 fn rect(x: f32, y: f32, width: f32, height: f32) -> [f32; 4] {
     [x, y, width, height]
 }
+
 fn strip_uv(frame: usize) -> [f32; 4] {
     [
         0.0,
@@ -392,6 +395,7 @@ fn strip_uv(frame: usize) -> [f32; 4] {
         (frame.min(59) + 1) as f32 / 60.0,
     ]
 }
+
 fn quad(
     texture: usize,
     r: [f32; 4],
@@ -457,6 +461,7 @@ struct UiState {
     origin: f32,
     show_help: bool,
 }
+
 struct Handler {
     renderer: Option<Renderer>,
     params: Arc<PluginParams>,
@@ -464,6 +469,7 @@ struct Handler {
     state: UiState,
     logical_size: (u32, u32),
 }
+
 impl WindowHandler for Handler {
     fn on_frame(&mut self, _window: &mut Window) {
         if let Some(renderer) = self.renderer.as_mut() {
@@ -511,6 +517,7 @@ impl WindowHandler for Handler {
         }
     }
 }
+
 impl Handler {
     fn source_point(&self) -> (f32, f32) {
         ViewTransform::fit(self.logical_size.0 as f32, self.logical_size.1 as f32)
@@ -580,6 +587,7 @@ impl Handler {
             _ => {}
         }
     }
+
     fn release(&mut self) {
         if let Some(index) = self.state.active.take() {
             if index == 0 {
@@ -596,11 +604,13 @@ pub(crate) struct RawEditor {
     params: Arc<PluginParams>,
     window: Option<baseview::WindowHandle>,
 }
+
 #[expect(
     unsafe_code,
     reason = "truce Editor is Send but baseview's platform window handle is UI-thread confined"
 )]
 unsafe impl Send for RawEditor {}
+
 impl RawEditor {
     pub(crate) fn new(params: Arc<PluginParams>) -> Self {
         Self {
@@ -609,10 +619,12 @@ impl RawEditor {
         }
     }
 }
+
 impl Editor for RawEditor {
     fn size(&self) -> (u32, u32) {
         SIZE
     }
+
     #[expect(
         unsafe_code,
         reason = "wgpu surface creation is tied to the live baseview child window"
@@ -645,11 +657,13 @@ impl Editor for RawEditor {
             },
         ));
     }
+
     fn close(&mut self) {
         if let Some(mut window) = self.window.take() {
             window.close();
         }
     }
+
     fn can_resize(&self) -> bool {
         false
     }

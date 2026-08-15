@@ -5,6 +5,8 @@ edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 readme.workspace = true
+license-file.workspace = true
+description = "MIDI normalization and synthesis-event contracts for Delay Lama"
 keywords.workspace = true
 categories.workspace = true
 
