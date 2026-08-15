@@ -270,6 +270,7 @@ dependencies = [
  "raw-window-handle 0.6.2",
  "truce",
  "truce-au",
+ "truce-build",
  "truce-clap",
  "truce-gui",
  "truce-lv2",
