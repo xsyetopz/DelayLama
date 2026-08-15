@@ -4,6 +4,10 @@ local add_apple_frameworks = build.add_apple_frameworks
 local add_juce_common = build.add_juce_common
 local add_juce_package_sources = build.add_juce_package_sources
 
+local function python_program()
+    return is_plat("windows") and "python" or "python3"
+end
+
 local project_root = os.projectdir()
 local identity_manifest = path.join(project_root, "config", "identity.json")
 local identity_version_byte_max = 255
@@ -246,7 +250,7 @@ local function add_plugin_sources(relative_paths)
         local json = import("core.base.json")
         local identity = json.loadfile(identity_manifest)
         add_plugin_identity(target, identity)
-        os.vrunv("python3", {
+        os.vrunv(python_program(), {
             path.absolute(juce_adapter_generator),
             "--output-dir",
             path.absolute(juce_adapter_dir),
@@ -285,7 +289,7 @@ local function add_clap_plugin_sources()
         local json = import("core.base.json")
         local identity = json.loadfile(identity_manifest)
         add_plugin_identity(target, identity)
-        os.vrunv("python3", {
+        os.vrunv(python_program(), {
             path.absolute(juce_adapter_generator),
             "--output-dir", path.absolute(juce_adapter_dir),
             "--source-root", path.absolute(project_root),
@@ -326,7 +330,7 @@ if has_config("tests") then
         on_load(function (target)
             local json = import("core.base.json")
             add_plugin_identity(target, json.loadfile(identity_manifest))
-            os.vrunv("python3", {
+            os.vrunv(python_program(), {
                 path.absolute(juce_adapter_generator),
                 "--output-dir",
                 path.absolute(juce_adapter_dir),
@@ -598,7 +602,7 @@ target("DelayLamaPlugins")
                 table.insert(arguments, path.absolute(host_binary))
             end
             -- Keep packaging phony so deleted or locally signed bundles are rebuilt.
-            batchcmds:vrunv("python3", arguments)
+            batchcmds:vrunv(python_program(), arguments)
         end
         if requested_formats.vst3 and supports_vst3() then
             package("vst3", "DelayLama_VST3")

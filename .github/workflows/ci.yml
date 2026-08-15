@@ -26,11 +26,18 @@ jobs:
           - name: Linux
             os: ubuntu-24.04
             formats: vst3,clap,lv2
-            target_minver: ""
+            python: python3
+            target_minver_arg: ""
           - name: macOS
             os: macos-14
             formats: vst3,clap,au,auv3,lv2
-            target_minver: "13.0"
+            python: python3
+            target_minver_arg: --target_minver=13.0
+          - name: Windows
+            os: windows-2022
+            formats: vst3,clap,lv2
+            python: python
+            target_minver_arg: ""
     steps:
       - name: Check out source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -40,22 +47,20 @@ jobs:
         with:
           xmake-version: "3.1.0"
 
-      - name: Run Python contracts
-        run: python3 -m unittest discover -s tests/tooling -t . -p '*_contract.py'
+      - name: Expose clang-format
+        if: runner.os == 'macOS'
+        run: dirname "$(xcrun --find clang-format)" >> "$GITHUB_PATH"
 
-      - name: Resolve dependencies
-        run: xmake require -y juce clap clap-helpers clap-juce-extensions
+      - name: Run Python contracts
+        run: ${{ matrix.python }} -m unittest discover -s tests/tooling -t . -p '*_contract.py'
 
       - name: Configure
-        env:
-          XMAKE_FORMATS: ${{ matrix.formats }}
-          TARGET_MINVER: ${{ matrix.target_minver }}
-        run: |
-          args=(f -m release "--formats=$XMAKE_FORMATS" --tests=y -y)
-          if [[ -n "$TARGET_MINVER" ]]; then
-            args+=("--target_minver=$TARGET_MINVER")
-          fi
-          xmake "${args[@]}"
+        run: >-
+          xmake f -m release
+          --formats=${{ matrix.formats }}
+          --tests=y
+          ${{ matrix.target_minver_arg }}
+          -y
 
       - name: Build plug-ins and tests
         run: >-
