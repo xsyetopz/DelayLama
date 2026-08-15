@@ -1,24 +1,24 @@
 # DelayLama
 
-C++20 software instrument for VST3, CLAP, AU, AUv3, AAX, and LV2 hosts.
+Rust software instrument for CLAP, VST3, AUv2, and AUv3 hosts.
 
 ## Build
 
-Requires Xmake and a C++20 compiler. AU and AUv3 require Xcode. AAX requires the Avid SDK.
+The Rust workspace owns DSP, host state, editor state, artwork, and format exports:
 
 ```sh
-xmake require -y juce clap clap-helpers clap-juce-extensions
-xmake f -m release --formats=vst3,clap,au -y
-xmake build DelayLamaPlugins
+just rust-test
+just rust-build
+just rust-bundles
 ```
 
-Set `--formats` to any comma-separated selection of `vst3`, `clap`, `au`, `auv3`, `aax`, and `lv2`. Bundles are written to `build/bundles/`.
-
-AUv3 examples:
+Build the AUv3 with full Xcode:
 
 ```sh
-xmake f -c -m release --formats=vst3,au,auv3 --target_minver=13.0 -y
-xmake f -c -p iphoneos -a arm64 -m release --formats=auv3 --tests=n --target_minver=13.0 -y
+set -a; . ./.env; set +a
+export DEVELOPER_DIR=/Applications/Xcode-26.6.0.app/Contents/Developer
+just install-auv3-dev
+just verify-auv3-registration
 ```
 
 ## Test
@@ -28,14 +28,7 @@ just test
 just check
 ```
 
-## Install on macOS
-
-```sh
-AUDIO_PLUGIN_SIGNING_IDENTITY='Apple Development: …' just install-au-vst3-dev
-AUV3_SIGNING_IDENTITY='Apple Development: …' just install-auv3-dev
-```
-
-Remove installed development builds with `just uninstall-au-vst3-dev` and `just uninstall-auv3-dev`.
+Remove the development AUv3 registration with `just uninstall-auv3-dev`.
 
 ## License
 

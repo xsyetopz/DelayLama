@@ -15,70 +15,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: ${{ matrix.name }}
+  rust:
+    name: Rust (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: Linux
-            os: ubuntu-24.04
-            formats: vst3,clap,lv2
-            python: python3
-            target_minver_arg: ""
-          - name: macOS
-            os: macos-14
-            formats: vst3,clap,au,auv3,lv2
-            python: python3
-            target_minver_arg: --target_minver=13.0
-          - name: Windows
-            os: windows-2022
-            formats: vst3,clap,lv2
-            python: python
-            target_minver_arg: ""
+        os: [ubuntu-24.04, macos-14, windows-2022]
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Set up Xmake
-        uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
-        with:
-          xmake-version: "3.1.0"
-
-      - name: Install Linux GUI headers
-        if: runner.os == 'Linux'
-        run: >-
-          sudo apt-get update && sudo apt-get install --no-install-recommends -y
-          libx11-dev libxcomposite-dev libxcursor-dev libxext-dev
-          libxinerama-dev libxrandr-dev libxrender-dev
-          libfreetype-dev libfontconfig1-dev
-
-      - name: Expose clang-format
-        if: runner.os == 'macOS'
-        run: dirname "$(xcrun --find clang-format)" >> "$GITHUB_PATH"
-
-      - name: Run Python contracts
-        run: ${{ matrix.python }} -m unittest discover -s tests/tooling -t . -p '*_contract.py'
-
-      - name: Configure
-        run: >-
-          xmake f -m release
-          --formats=${{ matrix.formats }}
-          --tests=y
-          ${{ matrix.target_minver_arg }}
-          -y
-
-      - name: Build plug-ins and tests
-        run: >-
-          xmake build DelayLamaPlugins
-          DelayLamaDspTests DelayLamaHostTests
-          DelayLamaEditorTests DelayLamaPlatformTests
-
-      - name: Run C++ tests
-        run: |
-          xmake run DelayLamaDspTests
-          xmake run DelayLamaHostTests
-          xmake run DelayLamaEditorTests
-          xmake run DelayLamaPlatformTests
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Test workspace
+        run: cargo test --workspace
+      - name: Build workspace
+        run: cargo build --workspace --release
