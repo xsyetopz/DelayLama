@@ -1,0 +1,71 @@
+name: CI
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-24.04
+            formats: vst3,clap,lv2
+            target_minver: ""
+          - name: macOS
+            os: macos-14
+            formats: vst3,clap,au,auv3,lv2
+            target_minver: "13.0"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Xmake
+        uses: xmake-io/github-action-setup-xmake@dcda7affc05f4d6d32357f30e1eb3414d45ac4db
+        with:
+          xmake-version: "3.1.0"
+
+      - name: Run Python contracts
+        run: python3 -m unittest discover -s tests/tooling -t . -p '*_contract.py'
+
+      - name: Resolve dependencies
+        run: xmake require -y juce clap clap-helpers clap-juce-extensions
+
+      - name: Configure
+        env:
+          XMAKE_FORMATS: ${{ matrix.formats }}
+          TARGET_MINVER: ${{ matrix.target_minver }}
+        run: |
+          args=(f -m release "--formats=$XMAKE_FORMATS" --tests=y -y)
+          if [[ -n "$TARGET_MINVER" ]]; then
+            args+=("--target_minver=$TARGET_MINVER")
+          fi
+          xmake "${args[@]}"
+
+      - name: Build plug-ins and tests
+        run: >-
+          xmake build DelayLamaPlugins
+          DelayLamaDspTests DelayLamaHostTests
+          DelayLamaEditorTests DelayLamaPlatformTests
+
+      - name: Run C++ tests
+        run: |
+          xmake run DelayLamaDspTests
+          xmake run DelayLamaHostTests
+          xmake run DelayLamaEditorTests
+          xmake run DelayLamaPlatformTests
