@@ -1,0 +1,45 @@
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-unwrap-in-tests = true
+
+avoid-breaking-exported-api = false
+warn-on-all-wildcard-imports = true
+
+array-size-threshold = 512            # Prevent excessive stack allocation.
+cognitive-complexity-threshold = 25   # Prevent overly complex branching logic.
+large-error-threshold = 128           # Prevent large error types in `Result` variants.
+max-include-file-size = 1048576       # Prevent embedding excessively large files.
+too-many-arguments-threshold = 6      # Prevent functions with too many parameters.
+type-complexity-threshold = 250       # Prevent overly nested generic types.
+vec-box-size-threshold = 4096         # Prevent excessive heap allocations in `Vec<Box<T>>`.
+
+disallowed-types = [
+    # Use faster hashing algorithms for internal keys.
+    { path = "std::collections::HashMap", reason = "Use `ahash::AHashMap` for fast hashing or `BTreeMap`" },
+    { path = "std::collections::HashSet", reason = "Use `ahash::AHashSet` for fast hashing or `BTreeSet`" },
+
+    # Avoid blocking operations in async contexts.
+    { path = "std::net::TcpStream", reason = "Use `tokio::net::TcpStream` in async contexts" },
+
+    # Use non-poisoning primitives for better performance and safety.
+    { path = "std::sync::Mutex", reason = "Use `parking_lot::Mutex` (sync) or `tokio::sync::Mutex` (async)" },
+    { path = "std::sync::RwLock", reason = "Use `parking_lot::RwLock` (sync) or `tokio::sync::RwLock` (async)" },
+]
+
+disallowed-methods = [
+    # Avoid legacy blocking coordination methods.
+    { path = "std::sync::mpsc::channel", reason = "Use `crossbeam::channel` or `tokio::sync::mpsc`; `std::sync::mpsc` is legacy" },
+    { path = "std::thread::sleep", reason = "Use `tokio::time::sleep` in async contexts to avoid blocking executor threads" },
+
+    # Avoid mutating global process state.
+    { path = "std::env::remove_var", reason = "Unsound in multithreaded environments; mutates process-wide environment" },
+    { path = "std::env::set_var", reason = "Unsound in multithreaded environments; mutates process-wide environment" },
+
+    # Use explicit memory management constructs.
+    { path = "std::mem::forget", reason = "Use `std::mem::ManuallyDrop` to make memory management intent explicit" },
+
+    # Avoid race conditions from file state changes.
+    { path = "std::path::Path::exists", reason = "Prone to TOCTOU race conditions; attempt to open/access file directly and handle errors" },
+]

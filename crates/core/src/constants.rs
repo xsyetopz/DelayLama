@@ -1,0 +1,19 @@
+//! DSP constants shared by the synthesis engine.
+pub const DRY_RING_SAMPLES: usize = 10_240;
+pub const DELAY_RING_SAMPLES: usize = 20_000;
+pub const GRAIN_SECONDS: f64 = 0.02;
+pub const SINE_TABLE_SAMPLES: usize = 1_024;
+pub const FREQUENCY_TABLE_SAMPLES: usize = 4_096;
+pub const FORMANT_TABLE_SAMPLES: usize = 1_280;
+pub const FORMANT_SEGMENT_SAMPLES: usize = 320;
+pub const FORMANT_SEGMENTS: usize = 4;
+pub const BEND_UPDATE_SECONDS: f64 = 0.01;
+pub const BEND_STEPS: usize = 10;
+pub const GLIDE_SNAP_SEMITONES: f64 = 0.2;
+pub const GLIDE_OCTAVE_SEMITONES: f64 = 12.0;
+pub const GLIDE_TIME_FLOOR: f64 = 0.01;
+pub const VIBRATO_REFRESH_SECONDS: f64 = 0.104;
+pub const INITIAL_VIBRATO_RATE_HZ: f32 = 4.0;
+pub const VIBRATO_RATE_SCALE: f32 = 0.2;
+pub const VIBRATO_DEPTH_FLOOR: f32 = 0.2;
+pub const DELAY_FEEDBACK: f32 = 0.5;

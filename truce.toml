@@ -1,0 +1,13 @@
+[vendor]
+id = "com.audionerdz"
+name = "AudioNerdz"
+au_manufacturer = "xsyT"
+url = "https://audionerdz.com"
+
+[[plugin]]
+name = "Delay Lama"
+bundle_id = "delaylama"
+crate = "delaylama-truce-plugin"
+category = "instrument"
+fourcc = "DLma"
+au_manufacturer = "xsyT"

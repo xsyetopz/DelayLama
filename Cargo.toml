@@ -1,0 +1,100 @@
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.97"
+repository = "https://github.com/xsyetopz/DelayLama.git"
+readme = "README.md"
+keywords = ["audio", "synthesizer", "plugin"]
+categories = ["multimedia::audio"]
+version = "0.1.0"
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"             # Require `Debug` impl on public types.
+missing_docs = "allow"
+static_mut_refs = "deny"                           # Prevent unsound access to mutable static state.
+unexpected_cfgs = "deny"                           # Reject typos in `#[cfg(...)]` attributes.
+unsafe_code = "deny"                               # Disallow unsafe code outside explicit `unsafe` blocks.
+unsafe_op_in_unsafe_fn = "deny"                    # Require `unsafe {}` blocks inside `unsafe fn`.
+unreachable_pub = "warn"                           # Flag `pub` items with no external visibility.
+unused_qualifications = "warn"                     # Remove redundant path qualifiers in imports.
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -10 }           # Enable standard Clippy rules as the base level
+allow_attributes = "deny"                          # Forces `#[expect(...)]` usage so unneeded suppression warns
+allow_attributes_without_reason = "deny"           # Requires reason = "..." justification for any lint exception
+as_conversions = "deny"                            # Disallows raw `as` casts that silently truncate or flip signs
+await_holding_lock = "deny"                        # Prevents holding `std::sync::MutexGuard` across `.await` points (deadlock)
+await_holding_refcell_ref = "deny"                 # Prevents holding `RefCell` borrows across `.await` points
+box_default = "warn"                               # Replaces `Box::new(T::default())` with `Box::default()` to save stack space
+cargo = { level = "warn", priority = -20 }         # Warn on Cargo manifest best practices
+cast_possible_truncation = "deny"                  # Flags numeric casts that overflow target bit widths
+cast_possible_wrap = "deny"                        # Flags signed-to-unsigned casts that wrap negative numbers
+cast_precision_loss = "deny"                       # Flags integer-to-float conversions that lose precision
+cast_sign_loss = "deny"                            # Flags casting negative integers to unsigned types
+clone_on_ref_ptr = "deny"                          # Replaces `arc.clone()` with `Arc::clone(&arc)` to highlight ref-counting
+cloned_instead_of_copied = "warn"                  # Replaces `.cloned()` with `.copied()` on `Copy` types for clarity/perf
+complexity = { level = "deny", priority = -9 }     # Deny unnecessarily complex expressions
+correctness = { level = "deny", priority = -9 }    # Deny outright logic errors and UB assumptions
+dbg_macro = "deny"                                 # Prevents leftover `dbg!` macros from reaching production
+expect_used = "warn"                               # Discourages `expect()` in core logic; forces error handling
+exit = "deny"                                      # Prevents `std::process::exit` which bypasses type destructors (`Drop`)
+float_cmp = "deny"                                 # Prevents direct `==` comparisons on floating-point values
+float_cmp_const = "deny"                           # Prevents direct `==` comparisons on float constants
+implicit_clone = "warn"                            # Forces explicit `.clone()` on types like `PathBuf`/`String`
+indexing_slicing = "deny"                          # Prevents panics on out-of-bounds `arr[i]`; forces safe `.get()` usage
+inefficient_to_string = "warn"                     # Prevents intermediate allocations when stringifying types
+items_after_test_module = "deny"                   # Enforces placing test modules at the bottom of source files
+large_enum_variant = "deny"                        # Prevents enum size inflation; forces boxing large variants
+large_futures = "deny"                             # Flags oversized async futures that inflate task stack/heap allocation
+large_stack_arrays = "warn"                        # Flags large array allocations on the stack
+large_stack_frames = "warn"                        # Flags function stack frames exceeding safe size limits
+large_types_passed_by_value = "warn"               # Flags large structs passed by value instead of reference
+let_underscore_must_use = "deny"                   # Prevents discarding `#[must_use]` values via `let _ = ...`
+map_err_ignore = "deny"                            # Prevents discarding underlying error contexts in `map_err(|_| ...)`
+missing_errors_doc = "allow"                       # Allows omitting `# Errors` sections on trivial internal functions
+missing_panics_doc = "allow"                       # Allows omitting `# Panics` sections on trivial internal functions
+missing_safety_doc = "deny"                        # Requires explicit `# Safety` sections in docs for `unsafe fn`
+multiple_crate_versions = "allow"                  # Ignores duplicate transitive dependency versions
+multiple_unsafe_ops_per_block = "deny"             # Limits `unsafe` blocks to one operation for precise audits
+must_use_candidate = "allow"                       # Disables mandatory `#[must_use]` suggestions across workspace
+needless_collect = "warn"                          # Flags unnecessary intermediate vector collections before iteration
+nursery = { level = "warn", priority = -20 }       # Warn on newer/experimental Clippy checks
+option_if_let_else = "allow"                       # Allows standard `match`/`if let` over forced `map_or_else` closure style
+panic = "warn"                                     # Flags explicit calls to the `panic!()` macro
+panic_in_result_fn = "deny"                        # Forces functions returning `Result` to return `Err` instead of panicking
+pedantic = { level = "warn", priority = -20 }      # Warn on strict style and idiomatic suggestions
+perf = { level = "deny", priority = -9 }           # Deny known runtime performance penalties
+print_stderr = "warn"                              # Flags raw `eprintln!` calls; encourages structured logging
+print_stdout = "warn"                              # Flags raw `println!` calls; encourages structured logging
+rc_buffer = "deny"                                 # Prevents `Arc<Vec<T>>` or `Rc<String>`; enforces `Arc<[T]>` or `Rc<str>`
+rc_mutex = "deny"                                  # Prevents non-thread-safe `Rc` combined with thread-safe `Mutex`
+restriction = { level = "allow", priority = -30 }  # Keep restriction off by default; opt-in per rule
+str_to_string = "warn"                             # Replaces `.to_string()` on `&str` with `.to_owned()` (bypasses `Display`)
+string_add = "deny"                                # Prevents inefficient string concatenation via `s1 + &s2`
+string_slice = "deny"                              # Prevents panics from slicing strings across non-UTF-8 boundaries
+style = { level = "deny", priority = -9 }          # Deny non-idiomatic Rust patterns
+suspicious = { level = "deny", priority = -9 }     # Deny constructs that are almost certainly bugs
+todo = "deny"                                      # Prevents placeholder code from leaking into production
+undocumented_unsafe_blocks = "deny"                # Requires explicit `// SAFETY:` comments above all `unsafe` blocks
+unimplemented = "deny"                             # Prevents `unimplemented!()` stubs from leaking into production
+unnecessary_safety_comment = "deny"                # Flags stale safety comments left on safe code
+unreachable = "deny"                               # Flags `unreachable!()` calls that panic if execution hits them
+unwrap_used = "deny"                               # Prevents runtime panics from unchecked `Option`/`Result` unwrapping
+wildcard_enum_match_arm = "deny"                   # Forces explicit match arms when matching non-exhaustive enums
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+strip = "symbols"
+debug = 0
+incremental = false
+
+[profile.release-with-checks]
+inherits = "release"
+overflow-checks = true
+debug-assertions = true

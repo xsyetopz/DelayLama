@@ -1,0 +1,12 @@
+[advisories]
+yanked = "deny"
+
+[bans]
+highlight = "all"
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+unknown-registry = "deny"
+unknown-git = "deny"
