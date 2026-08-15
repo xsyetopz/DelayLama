@@ -3,6 +3,7 @@ from __future__ import annotations
 import plistlib
 import shutil
 import subprocess
+import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -137,7 +138,10 @@ def write_lv2_bundle(
     shutil.copy2(binary, executable)
     if not manifest_tool.is_file():
         raise ValueError(f"missing JUCE LV2 manifest helper: {manifest_tool}")
-    subprocess.run([str(manifest_tool), str(executable)], check=True)
+    command = [str(manifest_tool), str(executable)]
+    if manifest_tool.suffix.lower() == ".py":
+        command.insert(0, sys.executable)
+    subprocess.run(command, check=True)
     for turtle_name in ("manifest.ttl", "dsp.ttl", "ui.ttl"):
         turtle = bundle / turtle_name
         if not turtle.is_file() or not turtle.read_text(encoding="utf-8").strip():

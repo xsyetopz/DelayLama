@@ -22,6 +22,13 @@ local function abort(message)
     option(nil)
 end
 
+local function add_linux_position_independent_code()
+    if is_plat("linux") then
+        add_cflags("-fPIC", {force = true})
+        add_cxxflags("-fPIC", {force = true})
+    end
+end
+
 local juce_modules = {
     core = {
         name = "juce_core",
@@ -61,6 +68,7 @@ local juce_modules = {
 }
 
 local function add_juce_common()
+    add_linux_position_independent_code()
     add_packages("juce")
     if is_plat("macosx", "iphoneos") then
         add_mxxflags("-fno-objc-arc", {force = true})
@@ -73,11 +81,10 @@ local function add_juce_common()
         "JUCE_USE_CDBURNER=0",
         "JUCE_USE_CDREADER=0",
         "JUCE_USE_WINRT_MIDI=0",
-        "JUCE_USE_WASAPI=0",
-        "JUCE_USE_DIRECTSOUND=0",
-        "JUCE_USE_ALSA=0",
-        "JUCE_USE_JACK=0",
-        "JUCE_USE_X11=0",
+        "JUCE_WASAPI=0",
+        "JUCE_DIRECTSOUND=0",
+        "JUCE_ALSA=0",
+        "JUCE_JACK=0",
         "JUCE_USE_OPENGL=0",
         "JUCE_DISABLE_JUCE_VERSION_PRINTING=1")
     if is_mode("debug") then
@@ -87,7 +94,8 @@ local function add_juce_common()
     end
     if is_plat("linux") then
         add_defines("LINUX=1")
-        add_links("rt", "dl", "pthread")
+        add_includedirs("/usr/include/freetype2")
+        add_links("rt", "dl", "pthread", "freetype", "fontconfig")
     end
     set_languages("cxx20")
 end
@@ -172,18 +180,21 @@ end
 
 target("DelayLamaDsp")
     set_kind("static")
+    add_linux_position_independent_code()
     set_languages("cxx20")
     add_files("src/dsp/control.cpp", "src/dsp/render.cpp")
     add_includedirs("src", {public = true})
 
 target("DelayLamaEditor")
     set_kind("static")
+    add_linux_position_independent_code()
     set_languages("cxx20")
     add_files("src/editor/interaction.cpp")
     add_includedirs("src", {public = true})
 
 target("DelayLamaHost")
     set_kind("static")
+    add_linux_position_independent_code()
     set_languages("cxx20")
     add_files("src/host/processor.cpp")
     add_includedirs("src", {public = true})
@@ -197,6 +208,7 @@ end
 
 target("DelayLamaEditorAssets")
     set_kind("static")
+    add_linux_position_independent_code()
     set_languages("cxx20")
     -- Wrap generated initializers so adapters depend on stable asset symbols.
     add_rules("utils.bin2c", {extensions = ".png"})

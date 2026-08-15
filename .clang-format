@@ -5,7 +5,6 @@ AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
@@ -25,10 +24,8 @@ ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
 FixNamespaceComments: false
 IndentPPDirectives: BeforeHash
-IndentRequires: true
 IndentWidth: 4
 IndentWrappedFunctionNames: true
-InsertNewlineAtEOF: true
 NamespaceIndentation: All
 SpaceAfterTemplateKeyword: false
 SpaceBeforeCpp11BracedList: true

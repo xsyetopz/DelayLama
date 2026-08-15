@@ -47,6 +47,14 @@ jobs:
         with:
           xmake-version: "3.1.0"
 
+      - name: Install Linux GUI headers
+        if: runner.os == 'Linux'
+        run: >-
+          sudo apt-get update && sudo apt-get install --no-install-recommends -y
+          libx11-dev libxcomposite-dev libxcursor-dev libxext-dev
+          libxinerama-dev libxrandr-dev libxrender-dev
+          libfreetype-dev libfontconfig1-dev
+
       - name: Expose clang-format
         if: runner.os == 'macOS'
         run: dirname "$(xcrun --find clang-format)" >> "$GITHUB_PATH"

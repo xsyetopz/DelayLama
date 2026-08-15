@@ -133,7 +133,7 @@ class BundleArtifactContractTests(unittest.TestCase):
             root = Path(temporary_directory)
             source = root / "DelayLama_LV2.so"
             source.write_bytes(b"LV2 module\n")
-            helper = root / "lv2-helper"
+            helper = root / "lv2-helper.py"
             helper.write_text(
                 "#!/usr/bin/env python3\n"
                 "from pathlib import Path\n"
