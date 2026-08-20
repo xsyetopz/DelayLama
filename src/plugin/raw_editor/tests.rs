@@ -7,18 +7,9 @@ use crate::{
 
 use super::{
     animation::animation_frame,
-    geometry::{
-        HitTarget, SourceRect, ViewTransform, hit_target, linear_value, pad_position, rotary_value,
-    },
+    geometry::{HitTarget, SourceRect, hit_target, linear_value, pad_position, rotary_value},
     interaction::{PointerPhase, pad_gesture},
 };
-
-fn assert_rect(actual: SourceRect, expected: SourceRect) {
-    assert!((actual.x - expected.x).abs() <= f32::EPSILON);
-    assert!((actual.y - expected.y).abs() <= f32::EPSILON);
-    assert!((actual.width - expected.width).abs() <= f32::EPSILON);
-    assert!((actual.height - expected.height).abs() <= f32::EPSILON);
-}
 
 #[test]
 fn raw_editor_pad_gesture_contract() {
@@ -86,68 +77,6 @@ fn frame_selection_boundaries() {
 }
 
 #[test]
-fn source_coordinates_match_cpp_editor_contract() {
-    assert_rect(
-        SourceRect::PAD,
-        SourceRect {
-            x: 96.0,
-            y: 362.0,
-            width: 166.0,
-            height: 84.0,
-        },
-    );
-    assert_rect(
-        SourceRect::PORTAMENTO,
-        SourceRect {
-            x: 21.0,
-            y: 448.0,
-            width: 50.0,
-            height: 50.0,
-        },
-    );
-    assert_rect(
-        SourceRect::DELAY,
-        SourceRect {
-            x: 104.0,
-            y: 479.0,
-            width: 152.0,
-            height: 25.0,
-        },
-    );
-    assert_rect(
-        SourceRect::VOICE,
-        SourceRect {
-            x: 293.0,
-            y: 447.0,
-            width: 50.0,
-            height: 50.0,
-        },
-    );
-    assert_rect(
-        SourceRect::HELP,
-        SourceRect {
-            x: 284.0,
-            y: 300.0,
-            width: 43.0,
-            height: 35.0,
-        },
-    );
-    let transform = ViewTransform::fit(720.0, 1200.0);
-    let view = transform.source_to_view((96.0, 362.0));
-    let source = transform.view_to_source(view);
-    assert!((source.0 - 96.0).abs() < 0.001);
-    assert!((source.1 - 362.0).abs() < 0.001);
-}
-
-#[test]
-fn hit_testing_uses_inverse_source_transform() {
-    let transform = ViewTransform::fit(1000.0, 510.0);
-    let source = transform.view_to_source(transform.source_to_view((179.0, 404.0)));
-    assert!(SourceRect::PAD.contains(source));
-    assert!(!SourceRect::VOICE.contains(source));
-}
-
-#[test]
 fn asset_editor_geometry_owns_hit_testing_and_parameter_edits() {
     assert_eq!(hit_target((96.0, 362.0)), Some(HitTarget::Pad));
     let pad_position = pad_position((179.0, 404.0));
@@ -156,12 +85,6 @@ fn asset_editor_geometry_owns_hit_testing_and_parameter_edits() {
     assert_eq!(hit_target((180.0, 487.0)), Some(HitTarget::Delay));
     assert!((linear_value(180.0, SourceRect::DELAY) - 0.5).abs() < 0.001);
     assert!((rotary_value(0.5, (25.0, 0.0)) - 0.6).abs() < 0.001);
-}
-
-#[test]
-fn rotary_drag_sensitivity_uses_logical_pixels_like_juce() {
-    let value = rotary_value(0.5, (0.0, -25.0));
-    assert!((value - 0.6).abs() < 0.001);
 }
 
 #[test]

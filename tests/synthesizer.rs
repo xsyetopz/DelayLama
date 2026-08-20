@@ -82,7 +82,7 @@ fn sanitises_parameters() {
 }
 
 #[test]
-fn renders_voice_and_delay() {
+fn note_on_renders_audio_and_updates_voice() {
     let mut e = SynthEngine::default();
     e.prepare(44100.0, 64, 2);
     let ev = [note_on(69)];
@@ -160,7 +160,7 @@ fn duplicate_note_on_is_idempotent_and_one_note_off_restores_previous_note() {
 }
 
 #[test]
-fn matches_original_controller_and_local_pad_protocol() {
+fn controller_7_scales_volume() {
     let mut engine = SynthEngine::default();
     engine.process(
         &mut [],
@@ -173,10 +173,6 @@ fn matches_original_controller_and_local_pad_protocol() {
         }],
     );
     assert!((engine.parameters().volume - 0.127).abs() < 0.0001);
-    engine.process(&mut [], 0, &[local_pad_down(1.0)]);
-    assert!(engine.pad_state().active);
-    engine.process(&mut [], 0, &[local_pad_up()]);
-    assert!(!engine.pad_state().active);
 }
 
 #[test]

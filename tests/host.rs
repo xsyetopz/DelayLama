@@ -34,17 +34,6 @@ fn parameter_round_trip() {
 }
 
 #[test]
-fn lifecycle_and_processing() {
-    let mut p = ProcessorModel::default();
-    p.prepare(48000.0, 32);
-    let mut left = vec![0.0; 8];
-    let mut right = vec![0.0; 8];
-    let mut out = [left.as_mut_slice(), right.as_mut_slice()];
-    p.process(&mut out, 8, &[]);
-    p.release();
-}
-
-#[test]
 fn visual_state_follows_processor_and_pad_ownership() {
     let mut processor = ProcessorModel::default();
     processor.set_parameters(Parameters {

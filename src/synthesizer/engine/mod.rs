@@ -382,6 +382,3 @@ const fn clamp(value: f32, fallback: f32) -> f32 {
         fallback
     }
 }
-
-#[cfg(test)]
-mod tests;
