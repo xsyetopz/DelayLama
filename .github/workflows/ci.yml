@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Test workspace
-        run: cargo test --workspace
-      - name: Build workspace
-        run: cargo build --workspace --release
+      - name: Test package
+        run: cargo test
+      - name: Build package
+        run: cargo build --release

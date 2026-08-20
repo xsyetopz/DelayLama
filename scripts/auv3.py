@@ -9,8 +9,11 @@ resizing. Logic consequently expands the fixed 360x510 editor to its entire
 
 from __future__ import annotations
 
+import argparse
+import os
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 TEMPLATE_RELATIVE = Path("cargo-truce-6.3.0/templates/au3/AudioUnitFactory.swift")
@@ -98,33 +101,96 @@ def patched(source: str) -> str:
     )
 
 
-def main() -> None:
+def prepare_patched_tool() -> Path:
     template = find_template()
-    patched_tool = Path("/tmp/openlama-cargo-truce-fixed-auv3")
+    patched_tool = Path("/tmp/delaylama-cargo-truce-fixed-auv3")
     shutil.rmtree(patched_tool, ignore_errors=True)
     shutil.copytree(template.parent.parent.parent, patched_tool)
     copied_template = patched_tool / "templates/au3/AudioUnitFactory.swift"
     copied_template.write_text(patched(copied_template.read_text()))
+    return patched_tool
 
-    # AudioUnitFactory.swift is embedded into cargo-truce at compile time.
-    # Running the installed binary after changing the registry file would still
-    # emit its old source, so compile and run this isolated patched tool copy.
-    shutil.rmtree(Path("target/tmp/au-v3"), ignore_errors=True)
+
+def rustup_environment() -> dict[str, str]:
+    toolchain = tomllib.loads(Path("rust-toolchain.toml").read_text())["toolchain"][
+        "channel"
+    ]
     subprocess.run(
         [
-            "cargo",
-            "run",
-            "--release",
-            "--manifest-path",
-            str(patched_tool / "Cargo.toml"),
-            "--",
-            "build",
-            "--au3",
-            "-p",
-            "delaylama-truce-plugin",
+            "rustup",
+            "target",
+            "add",
+            "--toolchain",
+            toolchain,
+            "aarch64-apple-darwin",
+            "x86_64-apple-darwin",
         ],
         check=True,
     )
+    cargo = subprocess.run(
+        ["rustup", "which", "--toolchain", toolchain, "cargo"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    environment = os.environ.copy()
+    environment["PATH"] = f"{Path(cargo).parent}:{environment['PATH']}"
+    return environment
+
+
+def copy_universal_bundles() -> None:
+    staging = Path("target/package/macos/plugin/delaylama")
+    output = Path("target/universal-bundles")
+    shutil.rmtree(output, ignore_errors=True)
+    output.mkdir(parents=True)
+    for name in [
+        "Delay Lama.clap",
+        "Delay Lama.vst3",
+        "Delay Lama.component",
+        "Delay Lama.app",
+    ]:
+        shutil.copytree(staging / name, output / name, symlinks=True)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--universal-package", action="store_true")
+    arguments = parser.parse_args()
+    patched_tool = prepare_patched_tool()
+    environment = rustup_environment()
+
+    # AudioUnitFactory.swift is embedded into cargo-truce at compile time.
+    # Compile and run the isolated patched tool rather than changing the
+    # registry source or invoking an installed binary with its old template.
+    command = [
+        "cargo",
+        "run",
+        "--release",
+        "--manifest-path",
+        str(patched_tool / "Cargo.toml"),
+        "--",
+    ]
+    if arguments.universal_package:
+        command.extend(
+            [
+                "package",
+                "-p",
+                "delaylama-truce-plugin",
+                "--formats",
+                "clap,vst3,au2,au3",
+                "--universal",
+                "--no-notarize",
+                "--target-cpu",
+                "baseline",
+                "--user",
+            ]
+        )
+    else:
+        shutil.rmtree(Path("target/tmp/au-v3"), ignore_errors=True)
+        command.extend(["build", "--au3", "-p", "delaylama-truce-plugin"])
+    subprocess.run(command, check=True, env=environment)
+    if arguments.universal_package:
+        copy_universal_bundles()
 
 
 if __name__ == "__main__":

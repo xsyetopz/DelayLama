@@ -11,16 +11,19 @@ _default:
     @just --list
 
 rust-test:
-    cargo test --workspace
+    cargo test
 
 rust-build:
-    cargo build --workspace --release
+    cargo build --release
 
 rust-bundles:
     cargo truce build --clap --vst3 --au2 -p delaylama-truce-plugin
 
 build-auv3:
     python3 scripts/auv3.py
+
+universal-macos-package:
+    python3 scripts/auv3.py --universal-package
 
 [script]
 sign-auv3-dev: build-auv3
