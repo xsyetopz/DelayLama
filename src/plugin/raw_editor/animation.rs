@@ -6,8 +6,14 @@ use crate::{
 };
 
 pub(in crate::plugin) fn animation_frame(state: HostVisualState) -> usize {
-    let gate = state.gate && (MINIMUM_NOTE..=MAXIMUM_NOTE).contains(&state.note);
-    let selector = if !gate {
+    let note_is_playable = (MINIMUM_NOTE..=MAXIMUM_NOTE).contains(&state.note);
+    let selector = if !state.gate {
+        if state.atlas_selector.is_finite() && state.atlas_selector >= 0.0 {
+            state.atlas_selector.clamp(0.0, 5.0 / 30.0)
+        } else {
+            5.0 / 30.0
+        }
+    } else if !note_is_playable {
         5.0 / 30.0
     } else if state.atlas_selector.is_finite() && state.atlas_selector >= 0.0 {
         state.atlas_selector.clamp(0.0, 1.0)

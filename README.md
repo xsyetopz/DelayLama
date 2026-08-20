@@ -1,6 +1,10 @@
 # DelayLama
 
-Rust software instrument for CLAP, VST3, AUv2, and AUv3 hosts.
+![Delay Lama (VST3) on FL Studio 2026](image.png)
+
+**Delay Lama** makes your computer sound and look like a singing Tibetan monk. Delay Lama is the first software synthesizer that features both vocal synthesis and a real-time 3D animated interface, which dynamically reacts to musical gestures from the user.
+
+To control the pitch and vowel sound (ooh-ow-ah-ayh-eeh), either a MIDI keyboard with pitchbender, or the built-in XY-controller can be used. For an extra mystical effect, Delay Lama has a simple stereo delay.
 
 ## Build
 
@@ -44,6 +48,10 @@ cargo clippy --all-targets --all-features
 ```
 
 Remove the development AUv3 registration with `just uninstall-auv3-dev`.
+
+## Attributions
+
+Description taken from [KVR](https://www.kvraudio.com/product/delay_lama_by_audionerdz)
 
 ## License
 

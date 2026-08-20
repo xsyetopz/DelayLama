@@ -55,6 +55,22 @@ fn visual_state_contract() {
 }
 
 #[test]
+fn idle_state_uses_atlas_animation_frames() {
+    let frame = |atlas_selector| {
+        animation_frame(HostVisualState {
+            note: MINIMUM_NOTE - 1,
+            gate: false,
+            vowel: 0.5,
+            atlas_selector,
+        })
+    };
+    assert_eq!(frame(0.0), 0);
+    assert_eq!(frame(2.0 / 30.0), 2);
+    assert_eq!(frame(5.0 / 30.0), 5);
+    assert_eq!(frame(1.0), 5);
+}
+
+#[test]
 fn frame_selection_boundaries() {
     let frame = |note, vowel| {
         animation_frame(HostVisualState {
