@@ -3,3 +3,4 @@
 *.cpp text eol=lf
 *.hpp text eol=lf
 *.xmake text eol=lf
+*.qoi binary

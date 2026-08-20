@@ -1,6 +1,27 @@
 [advisories]
 yanked = "deny"
 
+[licenses]
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "LicenseRef-DelayLama-Freeware-1.0",
+    "LicenseRef-TruceLicense-1.0",
+    "MIT",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.93
+
+[[licenses.clarify]]
+crate = "delaylama-truce-plugin"
+expression = "LicenseRef-DelayLama-Freeware-1.0"
+license-files = [{ path = "README.md", hash = 0x8a4de9f1 }]
+
 [bans]
 highlight = "all"
 multiple-versions = "warn"
