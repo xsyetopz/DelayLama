@@ -95,7 +95,7 @@ fn push_controls(
         .value(PluginParameter::Delay)
         .clamp(0.0, 1.0)
         .mul_add(SourceRect::DELAY.width - arrow.width, SourceRect::DELAY.x);
-    let delay_y = (SourceRect::DELAY.height - arrow.height).mul_add(0.5, SourceRect::DELAY.y);
+    let delay_y = (SourceRect::DELAY.height - arrow.height).mul_add(0.5, SourceRect::DELAY.y - 5.0);
     draws.push(quad(
         TextureSlot::Arrow,
         SourceRect::new(delay_x, delay_y, arrow.width, arrow.height),
@@ -111,34 +111,35 @@ fn push_pad_markers(
     transform: ViewTransform,
     logical_size: (u32, u32),
 ) {
-    let arrow = SourceRect::ARROW;
+    const MARKER_WIDTH: f32 = 12.0;
+    const MARKER_HEIGHT: f32 = 10.0;
+
     let horizontal_x = marker.0.mul_add(
         SourceRect::PAD.width,
-        arrow.width.mul_add(-0.5, SourceRect::PAD.x),
+        MARKER_WIDTH.mul_add(-0.5, SourceRect::PAD.x),
     );
     draws.push(quad(
         TextureSlot::Arrow,
         SourceRect::new(
             horizontal_x,
-            SourceRect::PAD.y - arrow.height,
-            arrow.width,
-            arrow.height,
+            SourceRect::PAD.y - MARKER_HEIGHT,
+            MARKER_WIDTH,
+            MARKER_HEIGHT,
         ),
         [0.0, 0.0, 1.0, 1.0],
         transform,
         logical_size,
     ));
-    let vertical_y = marker.1.mul_add(
-        SourceRect::PAD.height,
-        arrow.width.mul_add(-0.5, SourceRect::PAD.y),
-    );
+    let vertical_y = marker
+        .1
+        .mul_add(SourceRect::PAD.height - MARKER_WIDTH, SourceRect::PAD.y);
     draws.push(quad_rotated(
         TextureSlot::Arrow,
         SourceRect::new(
-            SourceRect::PAD.x - arrow.height,
+            SourceRect::PAD.x - MARKER_HEIGHT,
             vertical_y,
-            arrow.height,
-            arrow.width,
+            MARKER_HEIGHT,
+            MARKER_WIDTH,
         ),
         [0.0, 0.0, 1.0, 1.0],
         transform,
