@@ -1,0 +1,251 @@
+use std::sync::Arc;
+
+use baseview::{Event, EventStatus, MouseButton, MouseEvent, Window, WindowHandler};
+use num_traits::ToPrimitive;
+use truce::prelude::PluginContext;
+
+use crate::protocol::{GestureResult, GestureTransition, PAD_HOST_NOTE, PadPosition};
+
+use super::{
+    super::{parameter::PluginParameter, params::PluginParams},
+    geometry::{
+        HitTarget, SourceRect, ViewTransform, hit_target, linear_value, pad_position, rotary_value,
+    },
+    renderer::Renderer,
+};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(in crate::plugin) enum PointerPhase {
+    Down,
+    Drag,
+    Up,
+}
+
+pub(in crate::plugin) fn pad_gesture(x: f32, y: f32, phase: PointerPhase) -> GestureResult {
+    let position = PadPosition {
+        x: x.clamp(0.0, 1.0),
+        y: y.clamp(0.0, 1.0),
+    };
+    let transition = match phase {
+        PointerPhase::Down => GestureTransition::NoteOn(PAD_HOST_NOTE),
+        PointerPhase::Drag => GestureTransition::None,
+        PointerPhase::Up => GestureTransition::NoteOff(PAD_HOST_NOTE),
+    };
+    GestureResult {
+        position,
+        vowel: 1.0 - position.y,
+        transition,
+    }
+}
+
+#[derive(Default)]
+struct PointerState {
+    cursor: (f32, f32),
+    drag_start: (f32, f32),
+    marker: (f32, f32),
+}
+
+#[derive(Default)]
+struct UiState {
+    pointer: PointerState,
+    active: Option<HitTarget>,
+    origin: f32,
+    show_help: bool,
+}
+
+pub(super) struct Handler {
+    renderer: Option<Renderer>,
+    params: Arc<PluginParams>,
+    context: PluginContext<PluginParams>,
+    state: UiState,
+    logical_size: (u32, u32),
+}
+
+impl Handler {
+    pub(super) fn new(
+        renderer: Option<Renderer>,
+        params: Arc<PluginParams>,
+        context: PluginContext<PluginParams>,
+        logical_size: (u32, u32),
+    ) -> Self {
+        Self {
+            renderer,
+            params,
+            context,
+            state: UiState {
+                pointer: PointerState {
+                    marker: (0.5, 0.5),
+                    ..PointerState::default()
+                },
+                ..UiState::default()
+            },
+            logical_size,
+        }
+    }
+
+    fn source_point(&self) -> (f32, f32) {
+        ViewTransform::fit(
+            self.logical_size.0.to_f32().unwrap_or(f32::MAX),
+            self.logical_size.1.to_f32().unwrap_or(f32::MAX),
+        )
+        .view_to_source(self.state.pointer.cursor)
+    }
+
+    fn press(&mut self) {
+        if self.state.active.is_some() {
+            return;
+        }
+        self.state.pointer.drag_start = self.state.pointer.cursor;
+        let point = self.source_point();
+        if self.state.show_help {
+            self.state.show_help = false;
+            return;
+        }
+        match hit_target(point) {
+            Some(HitTarget::Pad) => {
+                let (x, y) = pad_position(point);
+                self.state.pointer.marker = (x, y);
+                let gesture = pad_gesture(x, y, PointerPhase::Down);
+                self.params.editor.push(gesture);
+                self.state.active = Some(HitTarget::Pad);
+            }
+            Some(HitTarget::Portamento) => {
+                self.state.active = Some(HitTarget::Portamento);
+                self.state.origin = self.params.value(PluginParameter::Portamento);
+                self.context
+                    .begin_edit(PluginParams::info(PluginParameter::Portamento).id);
+            }
+            Some(HitTarget::Delay) => {
+                self.state.active = Some(HitTarget::Delay);
+                self.context
+                    .begin_edit(PluginParams::info(PluginParameter::Delay).id);
+                self.drag(HitTarget::Delay);
+            }
+            Some(HitTarget::Voice) => {
+                self.state.active = Some(HitTarget::Voice);
+                self.state.origin = self.params.value(PluginParameter::Voice);
+                self.context
+                    .begin_edit(PluginParams::info(PluginParameter::Voice).id);
+            }
+            Some(HitTarget::Help) => self.state.show_help = !self.state.show_help,
+            None => {}
+        }
+    }
+
+    fn drag(&mut self, target: HitTarget) {
+        let point = self.source_point();
+        match target {
+            HitTarget::Pad => {
+                let (x, y) = pad_position(point);
+                self.state.pointer.marker = (x, y);
+                let gesture = pad_gesture(x, y, PointerPhase::Drag);
+                self.params.editor.push(gesture);
+            }
+            HitTarget::Delay => self.context.set_param(
+                PluginParams::info(PluginParameter::Delay).id,
+                f64::from(linear_value(point.0, SourceRect::DELAY)),
+            ),
+            HitTarget::Portamento | HitTarget::Voice => {
+                let delta = (
+                    self.state.pointer.cursor.0 - self.state.pointer.drag_start.0,
+                    self.state.pointer.cursor.1 - self.state.pointer.drag_start.1,
+                );
+                let parameter = match target {
+                    HitTarget::Portamento => PluginParameter::Portamento,
+                    HitTarget::Voice => PluginParameter::Voice,
+                    HitTarget::Pad | HitTarget::Delay | HitTarget::Help => return,
+                };
+                self.context.set_param(
+                    PluginParams::info(parameter).id,
+                    f64::from(rotary_value(self.state.origin, delta)),
+                );
+            }
+            HitTarget::Help => {}
+        }
+    }
+
+    fn release(&mut self) {
+        let Some(target) = self.state.active.take() else {
+            return;
+        };
+        if target == HitTarget::Pad {
+            let (x, y) = self.state.pointer.marker;
+            let gesture = pad_gesture(x, y, PointerPhase::Up);
+            self.params.editor.push(gesture);
+            return;
+        }
+        let parameter = match target {
+            HitTarget::Portamento => Some(PluginParameter::Portamento),
+            HitTarget::Delay => Some(PluginParameter::Delay),
+            HitTarget::Voice => Some(PluginParameter::Voice),
+            HitTarget::Pad | HitTarget::Help => None,
+        };
+        if let Some(parameter) = parameter {
+            self.context.end_edit(PluginParams::info(parameter).id);
+        }
+    }
+}
+
+impl WindowHandler for Handler {
+    fn on_frame(&mut self, _window: &mut Window) {
+        if let Some(renderer) = self.renderer.as_mut() {
+            renderer.render(
+                self.state.pointer.marker,
+                self.state.show_help,
+                &self.params,
+                self.logical_size,
+            );
+        }
+    }
+
+    fn on_event(&mut self, _window: &mut Window, event: Event) -> EventStatus {
+        match event {
+            Event::Mouse(MouseEvent::CursorMoved { position, .. }) => {
+                self.state.pointer.cursor = (
+                    position.x.to_f32().unwrap_or(0.0),
+                    position.y.to_f32().unwrap_or(0.0),
+                );
+                if let Some(active) = self.state.active {
+                    self.drag(active);
+                }
+                EventStatus::Captured
+            }
+            Event::Mouse(MouseEvent::ButtonPressed {
+                button: MouseButton::Left,
+                ..
+            }) => {
+                self.press();
+                EventStatus::Captured
+            }
+            // Leaving the child window must not terminate a held gesture. The
+            // button release (or lifecycle events below) owns its completion.
+            Event::Mouse(MouseEvent::ButtonReleased {
+                button: MouseButton::Left,
+                ..
+            })
+            | Event::Window(baseview::WindowEvent::Unfocused | baseview::WindowEvent::WillClose) => {
+                self.release();
+                EventStatus::Captured
+            }
+            Event::Window(baseview::WindowEvent::Resized(info)) => {
+                let logical_size = info.logical_size();
+                self.logical_size = (
+                    logical_size
+                        .width
+                        .clamp(0.0, f64::from(u32::MAX))
+                        .to_u32()
+                        .unwrap_or(0),
+                    logical_size
+                        .height
+                        .clamp(0.0, f64::from(u32::MAX))
+                        .to_u32()
+                        .unwrap_or(0),
+                );
+                EventStatus::Captured
+            }
+            Event::Mouse(_)
+            | Event::Keyboard(_)
+            | Event::Window(baseview::WindowEvent::Focused) => EventStatus::Ignored,
+        }
+    }
+}

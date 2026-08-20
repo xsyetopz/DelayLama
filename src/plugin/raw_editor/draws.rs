@@ -1,0 +1,154 @@
+use num_traits::ToPrimitive;
+
+use super::{
+    super::{parameter::PluginParameter, params::PluginParams},
+    artwork::TextureSlot,
+    geometry::{DrawCommand, SourceRect, ViewTransform, quad, quad_rotated, strip_uv},
+};
+
+pub(super) fn build_draws(
+    draws: &mut Vec<DrawCommand>,
+    marker: (f32, f32),
+    show_help: bool,
+    params: &PluginParams,
+    logical_size: (u32, u32),
+) {
+    let transform = ViewTransform::fit(
+        logical_size.0.to_f32().unwrap_or(f32::MAX),
+        logical_size.1.to_f32().unwrap_or(f32::MAX),
+    );
+    push_scene(draws, params, transform, logical_size);
+    push_controls(draws, params, transform, logical_size);
+    push_pad_markers(draws, marker, transform, logical_size);
+    if show_help {
+        draws.push(quad(
+            TextureSlot::Help,
+            SourceRect::HELP_PANEL,
+            [0.0, 0.0, 1.0, 1.0],
+            transform,
+            logical_size,
+        ));
+    }
+}
+
+fn push_scene(
+    draws: &mut Vec<DrawCommand>,
+    params: &PluginParams,
+    transform: ViewTransform,
+    logical_size: (u32, u32),
+) {
+    draws.push(quad(
+        TextureSlot::Scene,
+        SourceRect::SCENE_BACKGROUND,
+        [0.0, 0.0, 1.0, 1.0],
+        transform,
+        logical_size,
+    ));
+    let animation = params.editor.animation_frame().min(29);
+    let column = (animation / 6).to_f32().unwrap_or(0.0);
+    let row = (animation % 6).to_f32().unwrap_or(0.0);
+    draws.push(quad(
+        TextureSlot::Monk,
+        SourceRect::MONK,
+        [
+            column / 5.0,
+            row / 6.0,
+            (column + 1.0) / 5.0,
+            (row + 1.0) / 6.0,
+        ],
+        transform,
+        logical_size,
+    ));
+    draws.push(quad(
+        TextureSlot::Panel,
+        SourceRect::CONTROL_PANEL,
+        [0.0, 0.0, 1.0, 1.0],
+        transform,
+        logical_size,
+    ));
+}
+
+fn push_controls(
+    draws: &mut Vec<DrawCommand>,
+    params: &PluginParams,
+    transform: ViewTransform,
+    logical_size: (u32, u32),
+) {
+    let portamento_frame = frame_from_parameter(params.value(PluginParameter::Portamento));
+    let voice = frame_from_parameter(params.value(PluginParameter::Voice));
+    draws.push(quad(
+        TextureSlot::PortamentoKnob,
+        SourceRect::PORTAMENTO,
+        strip_uv(portamento_frame),
+        transform,
+        logical_size,
+    ));
+    draws.push(quad(
+        TextureSlot::VoiceKnob,
+        SourceRect::VOICE,
+        strip_uv(voice),
+        transform,
+        logical_size,
+    ));
+    let arrow = SourceRect::ARROW;
+    let delay_x = params
+        .value(PluginParameter::Delay)
+        .clamp(0.0, 1.0)
+        .mul_add(SourceRect::DELAY.width - arrow.width, SourceRect::DELAY.x);
+    let delay_y = (SourceRect::DELAY.height - arrow.height).mul_add(0.5, SourceRect::DELAY.y);
+    draws.push(quad(
+        TextureSlot::Arrow,
+        SourceRect::new(delay_x, delay_y, arrow.width, arrow.height),
+        [0.0, 0.0, 1.0, 1.0],
+        transform,
+        logical_size,
+    ));
+}
+
+fn push_pad_markers(
+    draws: &mut Vec<DrawCommand>,
+    marker: (f32, f32),
+    transform: ViewTransform,
+    logical_size: (u32, u32),
+) {
+    let arrow = SourceRect::ARROW;
+    let horizontal_x = marker.0.mul_add(
+        SourceRect::PAD.width,
+        arrow.width.mul_add(-0.5, SourceRect::PAD.x),
+    );
+    draws.push(quad(
+        TextureSlot::Arrow,
+        SourceRect::new(
+            horizontal_x,
+            SourceRect::PAD.y - arrow.height,
+            arrow.width,
+            arrow.height,
+        ),
+        [0.0, 0.0, 1.0, 1.0],
+        transform,
+        logical_size,
+    ));
+    let vertical_y = marker.1.mul_add(
+        SourceRect::PAD.height,
+        arrow.width.mul_add(-0.5, SourceRect::PAD.y),
+    );
+    draws.push(quad_rotated(
+        TextureSlot::Arrow,
+        SourceRect::new(
+            SourceRect::PAD.x - arrow.height,
+            vertical_y,
+            arrow.height,
+            arrow.width,
+        ),
+        [0.0, 0.0, 1.0, 1.0],
+        transform,
+        logical_size,
+    ));
+}
+
+fn frame_from_parameter(value: f32) -> usize {
+    (value.clamp(0.0, 1.0) * 59.0)
+        .round()
+        .to_usize()
+        .unwrap_or(0)
+}

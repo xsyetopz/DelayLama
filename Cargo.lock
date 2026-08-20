@@ -145,12 +145,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "byteorder-lite"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
-
-[[package]]
 name = "cc"
 version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -218,40 +212,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
-name = "delaylama-editor"
-version = "0.1.0"
-dependencies = [
- "delaylama-editor-assets",
- "delaylama-synthesizer",
- "num-traits",
-]
-
-[[package]]
-name = "delaylama-editor-assets"
-version = "0.1.0"
-
-[[package]]
-name = "delaylama-host"
-version = "0.1.0"
-dependencies = [
- "delaylama-editor",
- "delaylama-protocol",
- "delaylama-synthesizer",
-]
-
-[[package]]
-name = "delaylama-protocol"
-version = "0.1.0"
-
-[[package]]
-name = "delaylama-synthesizer"
-version = "0.1.0"
-dependencies = [
- "delaylama-protocol",
- "num-traits",
-]
-
-[[package]]
 name = "delaylama-truce-plugin"
 version = "0.1.0"
 dependencies = [
@@ -259,14 +219,10 @@ dependencies = [
  "bytemuck",
  "clap-sys",
  "crossbeam-queue",
- "delaylama-editor",
- "delaylama-host",
- "delaylama-protocol",
- "delaylama-synthesizer",
- "image",
  "log",
  "num-traits",
  "pollster 1.0.1",
+ "qoi",
  "raw-window-handle 0.6.2",
  "truce",
  "truce-au",
@@ -528,19 +484,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
-name = "image"
-version = "0.25.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
-dependencies = [
- "bytemuck",
- "byteorder-lite",
- "moxcms",
- "num-traits",
- "png",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -722,16 +665,6 @@ checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
  "simd-adler32",
-]
-
-[[package]]
-name = "moxcms"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
-dependencies = [
- "num-traits",
- "pxfm",
 ]
 
 [[package]]
@@ -1115,10 +1048,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d595e54a326bc53c1c197b32d295e14b169e3cfeaa8dc82b529f947fba6bcf5"
 
 [[package]]
-name = "pxfm"
-version = "0.1.30"
+name = "qoi"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
+checksum = "7f6d64c71eb498fe9eae14ce4ec935c555749aef511cca85b5568910d6e48001"
+dependencies = [
+ "bytemuck",
+]
 
 [[package]]
 name = "quote"
