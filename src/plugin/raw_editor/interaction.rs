@@ -2,12 +2,14 @@ use std::sync::Arc;
 
 use baseview::{Event, EventStatus, MouseButton, MouseEvent, Window, WindowHandler};
 use num_traits::ToPrimitive;
+use truce::core::editor::PluginContextReadF32;
 use truce::prelude::PluginContext;
 
 use crate::protocol::{GestureResult, GestureTransition, PAD_HOST_NOTE, PadPosition};
 
 use super::{
     super::{parameter::PluginParameter, params::PluginParams},
+    draws::ControlValues,
     geometry::{
         HitTarget, SourceRect, ViewTransform, hit_target, linear_value, pad_position, rotary_value,
     },
@@ -89,6 +91,25 @@ impl Handler {
             self.logical_size.1.to_f32().unwrap_or(f32::MAX),
         )
         .view_to_source(self.state.pointer.cursor)
+    }
+
+    fn host_parameter(&self, parameter: PluginParameter) -> f32 {
+        self.context
+            .get_param(PluginParams::info(parameter).id)
+            .clamp(0.0, 1.0)
+    }
+
+    fn sync_control_values(&mut self) -> ControlValues {
+        let controls = ControlValues {
+            vowel: self.host_parameter(PluginParameter::Vowel),
+            portamento: self.host_parameter(PluginParameter::Portamento),
+            delay: self.host_parameter(PluginParameter::Delay),
+            voice: self.host_parameter(PluginParameter::Voice),
+        };
+        if self.state.active != Some(HitTarget::Pad) {
+            self.state.pointer.marker.1 = 1.0 - controls.vowel;
+        }
+        controls
     }
 
     fn press(&mut self) {
@@ -200,11 +221,13 @@ mod tests;
 
 impl WindowHandler for Handler {
     fn on_frame(&mut self, _window: &mut Window) {
+        let controls = self.sync_control_values();
         if let Some(renderer) = self.renderer.as_mut() {
             renderer.render(
                 self.state.pointer.marker,
                 self.state.show_help,
                 &self.params,
+                controls,
                 self.logical_size,
             );
         }
