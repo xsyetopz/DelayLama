@@ -7,7 +7,7 @@ use wgpu::util::DeviceExt;
 use super::{
     super::params::PluginParams,
     artwork::Artwork,
-    draws::build_draws,
+    draws::{ControlValues, build_draws},
     geometry::{DrawCommand, Vertex},
 };
 
@@ -263,6 +263,7 @@ impl Renderer {
         marker: (f32, f32),
         show_help: bool,
         params: &PluginParams,
+        controls: ControlValues,
         logical_size: (u32, u32),
     ) {
         let (wgpu::CurrentSurfaceTexture::Success(frame)
@@ -280,6 +281,7 @@ impl Renderer {
             marker,
             show_help,
             params,
+            controls,
             logical_size,
         );
         self.frame_geometry.vertices.clear();
