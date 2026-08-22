@@ -18,7 +18,7 @@ allow = [
 confidence-threshold = 0.93
 
 [[licenses.clarify]]
-crate = "delaylama-truce-plugin"
+crate = "xymonk"
 expression = "LicenseRef-DelayLama-Freeware-1.0"
 license-files = [{ path = "README.md", hash = 0x8a4de9f1 }]
 

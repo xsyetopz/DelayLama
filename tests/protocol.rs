@@ -1,8 +1,6 @@
 //! Public protocol-contract tests.
 
-use delaylama_truce_plugin::protocol::{
-    CC_DELAY_MIX, MidiMessage, internal_note, to_synthesis_event,
-};
+use xymonk::protocol::{CC_DELAY_MIX, MidiMessage, internal_note, to_synthesis_event};
 
 #[test]
 fn maps_midi_messages_at_host_boundary() {

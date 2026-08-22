@@ -106,8 +106,11 @@ impl Handler {
                 let (x, y) = pad_position(point);
                 self.state.pointer.marker = (x, y);
                 let gesture = pad_gesture(x, y, PointerPhase::Down);
-                self.params.editor.push(gesture);
                 self.state.active = Some(HitTarget::Pad);
+                let vowel_id = PluginParams::info(PluginParameter::Vowel).id;
+                self.context.begin_edit(vowel_id);
+                self.context.set_param(vowel_id, f64::from(gesture.vowel));
+                self.params.editor.push(gesture);
             }
             Some(HitTarget::Portamento) => {
                 self.state.active = Some(HitTarget::Portamento);
@@ -139,6 +142,10 @@ impl Handler {
                 let (x, y) = pad_position(point);
                 self.state.pointer.marker = (x, y);
                 let gesture = pad_gesture(x, y, PointerPhase::Drag);
+                self.context.set_param(
+                    PluginParams::info(PluginParameter::Vowel).id,
+                    f64::from(gesture.vowel),
+                );
                 self.params.editor.push(gesture);
             }
             HitTarget::Delay => self.context.set_param(
@@ -172,6 +179,8 @@ impl Handler {
             let (x, y) = self.state.pointer.marker;
             let gesture = pad_gesture(x, y, PointerPhase::Up);
             self.params.editor.push(gesture);
+            self.context
+                .end_edit(PluginParams::info(PluginParameter::Vowel).id);
             return;
         }
         let parameter = match target {
@@ -185,6 +194,9 @@ impl Handler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
 
 impl WindowHandler for Handler {
     fn on_frame(&mut self, _window: &mut Window) {

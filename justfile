@@ -17,7 +17,7 @@ rust-build:
     cargo build --release
 
 rust-bundles:
-    cargo truce build --clap --vst3 --au2 -p delaylama-truce-plugin
+    cargo truce build --clap --vst3 --au2 -p xymonk
 
 build-auv3:
     python3 scripts/auv3.py
@@ -74,7 +74,7 @@ install-auv3-dev: sign-auv3-dev ensure-logic-is-closed
     test -d "$source_app"
     mkdir -p "$install_root"
     if test -e "$installed_app"; then
-        backup_root="$(mktemp -d "${TMPDIR:-/tmp}/delaylama-auv3.XXXXXX")"
+        backup_root="$(mktemp -d "${TMPDIR:-/tmp}/xymonk-auv3.XXXXXX")"
         mv "$installed_app" "$backup_root/Delay Lama.app"
     fi
     ditto "$source_app" "$installed_app"

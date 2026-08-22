@@ -89,33 +89,43 @@ impl ProcessorModel {
         next: [f32; 4],
     ) -> bool {
         let [next_vowel, next_port_time, next_delay_mix, next_voice] = next;
-        let old = previous.replace(next);
-        if old.is_some_and(|[old_vowel, old_port_time, old_delay_mix, old_voice]| {
-            old_vowel.partial_cmp(&next_vowel) == Some(std::cmp::Ordering::Equal)
-                && old_port_time.partial_cmp(&next_port_time) == Some(std::cmp::Ordering::Equal)
-                && old_delay_mix.partial_cmp(&next_delay_mix) == Some(std::cmp::Ordering::Equal)
-                && old_voice.partial_cmp(&next_voice) == Some(std::cmp::Ordering::Equal)
-        }) {
+        let old = *previous;
+        let mut merged = self.parameters();
+        let pad_owns_vowel = self.engine.pad_state().active;
+        let vowel_changed = !pad_owns_vowel
+            && old.is_none_or(|[old_vowel, ..]| old_vowel.to_bits() != next_vowel.to_bits());
+        let port_time_changed = old.is_none_or(|[_, old_port_time, ..]| {
+            old_port_time.to_bits() != next_port_time.to_bits()
+        });
+        let delay_mix_changed = old.is_none_or(|[_, _, old_delay_mix, _]| {
+            old_delay_mix.to_bits() != next_delay_mix.to_bits()
+        });
+        let voice_changed =
+            old.is_none_or(|[_, _, _, old_voice]| old_voice.to_bits() != next_voice.to_bits());
+
+        if vowel_changed {
+            merged.vowel = next_vowel;
+        }
+        if port_time_changed {
+            merged.port_time = next_port_time;
+        }
+        if delay_mix_changed {
+            merged.delay_mix = next_delay_mix;
+        }
+        if voice_changed {
+            merged.voice = next_voice;
+        }
+
+        let remembered_vowel = if pad_owns_vowel {
+            old.map_or(merged.vowel, |[old_vowel, ..]| old_vowel)
+        } else {
+            next_vowel
+        };
+        *previous = Some([remembered_vowel, next_port_time, next_delay_mix, next_voice]);
+        if !(vowel_changed || port_time_changed || delay_mix_changed || voice_changed) {
             return false;
         }
 
-        let mut merged = self.parameters();
-        if old.is_none_or(|[old_vowel, ..]| old_vowel.to_bits() != next_vowel.to_bits()) {
-            merged.vowel = next_vowel;
-        }
-        if old.is_none_or(|[_, old_port_time, ..]| {
-            old_port_time.to_bits() != next_port_time.to_bits()
-        }) {
-            merged.port_time = next_port_time;
-        }
-        if old.is_none_or(|[_, _, old_delay_mix, _]| {
-            old_delay_mix.to_bits() != next_delay_mix.to_bits()
-        }) {
-            merged.delay_mix = next_delay_mix;
-        }
-        if old.is_none_or(|[_, _, _, old_voice]| old_voice.to_bits() != next_voice.to_bits()) {
-            merged.voice = next_voice;
-        }
         self.set_parameters(merged);
         true
     }

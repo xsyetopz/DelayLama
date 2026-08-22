@@ -1,6 +1,6 @@
 //! Synthesizer behavior and regression tests.
 
-use delaylama_truce_plugin::{
+use xymonk::{
     protocol::{PAD_INTERNAL_NOTE, SynthesisEvent, SynthesisEventKind},
     synthesizer::{Parameters, SynthEngine},
 };

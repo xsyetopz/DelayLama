@@ -13,8 +13,9 @@ import argparse
 import os
 import shutil
 import subprocess
-import tomllib
 from pathlib import Path
+
+import tomllib
 
 TEMPLATE_RELATIVE = Path("cargo-truce-6.3.0/templates/au3/AudioUnitFactory.swift")
 OLD_CONFIG = """override func supportedViewConfigurations(
@@ -103,7 +104,7 @@ def patched(source: str) -> str:
 
 def prepare_patched_tool() -> Path:
     template = find_template()
-    patched_tool = Path("/tmp/delaylama-cargo-truce-fixed-auv3")
+    patched_tool = Path("/tmp/xymonk-cargo-truce-fixed-auv3")
     shutil.rmtree(patched_tool, ignore_errors=True)
     shutil.copytree(template.parent.parent.parent, patched_tool)
     copied_template = patched_tool / "templates/au3/AudioUnitFactory.swift"
@@ -175,7 +176,7 @@ def main() -> None:
             [
                 "package",
                 "-p",
-                "delaylama-truce-plugin",
+                "xymonk",
                 "--formats",
                 "clap,vst3,au2,au3",
                 "--universal",
@@ -187,7 +188,7 @@ def main() -> None:
         )
     else:
         shutil.rmtree(Path("target/tmp/au-v3"), ignore_errors=True)
-        command.extend(["build", "--au3", "-p", "delaylama-truce-plugin"])
+        command.extend(["build", "--au3", "-p", "xymonk"])
     subprocess.run(command, check=True, env=environment)
     if arguments.universal_package:
         copy_universal_bundles()

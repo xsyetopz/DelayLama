@@ -7,7 +7,7 @@ url = "https://audionerdz.com"
 [[plugin]]
 name = "Delay Lama"
 bundle_id = "delaylama"
-crate = "delaylama-truce-plugin"
+crate = "xymonk"
 category = "instrument"
 fourcc = "DLma"
 au_manufacturer = "xsyT"

@@ -212,29 +212,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
-name = "delaylama-truce-plugin"
-version = "0.1.0"
-dependencies = [
- "baseview-truce",
- "bytemuck",
- "clap-sys",
- "crossbeam-queue",
- "log",
- "num-traits",
- "pollster 1.0.1",
- "qoi",
- "raw-window-handle 0.6.2",
- "truce",
- "truce-au",
- "truce-build",
- "truce-clap",
- "truce-gui",
- "truce-lv2",
- "truce-vst3",
- "wgpu",
-]
-
-[[package]]
 name = "dispatch2"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -603,9 +580,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.33"
+version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
+checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "lyon_geom"
@@ -2110,6 +2087,29 @@ name = "xml-rs"
 version = "0.8.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
+
+[[package]]
+name = "xymonk"
+version = "0.1.0"
+dependencies = [
+ "baseview-truce",
+ "bytemuck",
+ "clap-sys",
+ "crossbeam-queue",
+ "log",
+ "num-traits",
+ "pollster 1.0.1",
+ "qoi",
+ "raw-window-handle 0.6.2",
+ "truce",
+ "truce-au",
+ "truce-build",
+ "truce-clap",
+ "truce-gui",
+ "truce-lv2",
+ "truce-vst3",
+ "wgpu",
+]
 
 [[package]]
 name = "zerocopy"

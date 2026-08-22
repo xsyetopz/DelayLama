@@ -1,10 +1,10 @@
 //! Public host-processor contract tests.
 
-use delaylama_truce_plugin::host::ProcessorModel;
-use delaylama_truce_plugin::protocol::{
+use xymonk::host::ProcessorModel;
+use xymonk::protocol::{
     GestureResult, GestureTransition, PAD_HOST_NOTE, PAD_INTERNAL_NOTE, PadPosition,
 };
-use delaylama_truce_plugin::synthesizer::Parameters;
+use xymonk::synthesizer::Parameters;
 
 fn processor_with_held_pad() -> ProcessorModel {
     let mut processor = ProcessorModel::default();

@@ -203,3 +203,6 @@ fn parameter_info(parameter: PluginParameter) -> ParamInfo {
         midi_channel: None,
     }
 }
+
+#[cfg(test)]
+mod tests;

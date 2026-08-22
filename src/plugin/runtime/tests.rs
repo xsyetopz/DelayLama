@@ -55,6 +55,31 @@ fn au_block_parameter_polling_does_not_overwrite_rendered_pad_vowel() {
 }
 
 #[test]
+fn editor_vowel_automation_is_deferred_while_pad_smoothing_owns_audio() {
+    use crate::protocol::{GestureResult, GestureTransition, PAD_HOST_NOTE, PadPosition};
+
+    let mut previous = Some([0.5, 0.5, 0.8, 0.5]);
+    let mut processor = ProcessorModel::default();
+    processor.prepare(44_100.0, 512);
+    processor.apply_pad_gesture(GestureResult {
+        position: PadPosition { x: 0.5, y: 0.18 },
+        vowel: 0.82,
+        transition: GestureTransition::NoteOn(PAD_HOST_NOTE),
+    });
+
+    assert!(!processor.apply_changed_host_parameters(&mut previous, [0.82, 0.5, 0.8, 0.5],));
+    assert!((processor.parameters().vowel - 0.5).abs() <= f32::EPSILON);
+
+    processor.apply_pad_gesture(GestureResult {
+        position: PadPosition { x: 0.5, y: 0.18 },
+        vowel: 0.82,
+        transition: GestureTransition::NoteOff(PAD_HOST_NOTE),
+    });
+    assert!(processor.apply_changed_host_parameters(&mut previous, [0.82, 0.5, 0.8, 0.5],));
+    assert!((processor.parameters().vowel - 0.82).abs() <= f32::EPSILON);
+}
+
+#[test]
 fn editor_bridge_carries_editor_gesture_through_the_host_owner() {
     use crate::{
         plugin::raw_editor::{PointerPhase, pad_gesture},
