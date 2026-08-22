@@ -1,16 +1,25 @@
 use num_traits::ToPrimitive;
 
 use super::{
-    super::{parameter::PluginParameter, params::PluginParams},
+    super::params::PluginParams,
     artwork::TextureSlot,
     geometry::{DrawCommand, SourceRect, ViewTransform, quad, quad_rotated, strip_uv},
 };
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct ControlValues {
+    pub(super) vowel: f32,
+    pub(super) portamento: f32,
+    pub(super) delay: f32,
+    pub(super) voice: f32,
+}
 
 pub(super) fn build_draws(
     draws: &mut Vec<DrawCommand>,
     marker: (f32, f32),
     show_help: bool,
     params: &PluginParams,
+    controls: ControlValues,
     logical_size: (u32, u32),
 ) {
     let transform = ViewTransform::fit(
@@ -18,7 +27,7 @@ pub(super) fn build_draws(
         logical_size.1.to_f32().unwrap_or(f32::MAX),
     );
     push_scene(draws, params, transform, logical_size);
-    push_controls(draws, params, transform, logical_size);
+    push_controls(draws, controls, transform, logical_size);
     push_pad_markers(draws, marker, transform, logical_size);
     if show_help {
         draws.push(quad(
@@ -70,12 +79,12 @@ fn push_scene(
 
 fn push_controls(
     draws: &mut Vec<DrawCommand>,
-    params: &PluginParams,
+    controls: ControlValues,
     transform: ViewTransform,
     logical_size: (u32, u32),
 ) {
-    let portamento_frame = frame_from_parameter(params.value(PluginParameter::Portamento));
-    let voice = frame_from_parameter(params.value(PluginParameter::Voice));
+    let portamento_frame = frame_from_parameter(controls.portamento);
+    let voice = frame_from_parameter(controls.voice);
     draws.push(quad(
         TextureSlot::PortamentoKnob,
         SourceRect::PORTAMENTO,
@@ -91,8 +100,8 @@ fn push_controls(
         logical_size,
     ));
     let arrow = SourceRect::ARROW;
-    let delay_x = params
-        .value(PluginParameter::Delay)
+    let delay_x = controls
+        .delay
         .clamp(0.0, 1.0)
         .mul_add(SourceRect::DELAY.width - arrow.width, SourceRect::DELAY.x);
     let delay_y = (SourceRect::DELAY.height - arrow.height).mul_add(0.5, SourceRect::DELAY.y - 5.0);
